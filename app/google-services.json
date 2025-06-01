@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "192197850478",
+    "project_id": "project-manager-mobile",
+    "storage_bucket": "project-manager-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:192197850478:android:e0c43a61b844fad9287d7f",
+        "android_client_info": {
+          "package_name": "com.example.projectmanagerapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATxtUN_96AZ5BRUTfz75z5eOmv0GHuWCs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
