@@ -11,7 +11,7 @@ import com.example.projectmanagerapp.ui.main.HomeScreen
 
 @Composable
 fun AppNavHost(navController: NavHostController, modifier: Modifier) {
-    NavHost(navController = navController, startDestination = AppDestinations.LOGIN_ROUTE, modifier = modifier) {
+    NavHost(navController = navController, startDestination = AppDestinations.HOME_ROUTE, modifier = modifier) {
         composable(AppDestinations.HOME_ROUTE) {
             HomeScreen()
         }

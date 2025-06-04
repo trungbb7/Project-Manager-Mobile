@@ -7,7 +7,7 @@ import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun HomeScreen() {
-    Text("Home Screen")
+    Drawer({})
 }
 
 @Preview(showBackground = true)
