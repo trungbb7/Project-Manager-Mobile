@@ -21,7 +21,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource // Giả sử bạn có ảnh placeholder
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -30,17 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-// import com.example.trello_clone.R // Import R của bạn để lấy drawable
 
-// --- Data Class (Mẫu) ---
-data class Board(
-    val id: String,
-    val name: String,
-    val backgroundImage: String? = null, // URL hoặc URI tới ảnh nền
-    val backgroundColor: Color = Color.Gray // Màu nền mặc định nếu không có ảnh
-)
 
-// --- Composable chính cho màn hình quản lý bảng ---
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BoardsScreen(
@@ -64,7 +55,6 @@ fun BoardsScreen(
                     IconButton(onClick = onSearchClick) {
                         Icon(Icons.Filled.Search, contentDescription = "Tìm kiếm bảng")
                     }
-                    // Bạn có thể thêm các action khác ở đây
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,

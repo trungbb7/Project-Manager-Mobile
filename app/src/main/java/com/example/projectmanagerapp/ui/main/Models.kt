@@ -3,6 +3,14 @@ package com.example.projectmanagerapp.ui.main
 import androidx.compose.ui.graphics.Color
 import java.util.UUID
 
+
+data class Board(
+    val id: String,
+    val name: String,
+    val backgroundImage: String? = null,
+    val backgroundColor: Color = Color.Gray
+)
+
 data class TrelloList(
     val id: String = UUID.randomUUID().toString(),
     var name: String,

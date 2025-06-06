@@ -92,7 +92,7 @@ fun CreateBoardScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(16f / 9f) // Tỷ lệ phổ biến cho preview
+                    .aspectRatio(16f / 9f)
                     .padding(bottom = 16.dp),
                 shape = MaterialTheme.shapes.medium,
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -202,7 +202,7 @@ fun CreateBoardScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f)) // Đẩy nút Tạo xuống dưới
+            Spacer(modifier = Modifier.weight(1f))
 
             // --- Nút Tạo Bảng ---
             Button(
