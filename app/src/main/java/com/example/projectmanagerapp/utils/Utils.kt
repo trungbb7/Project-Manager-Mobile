@@ -6,13 +6,13 @@ import java.util.Locale
 
 object Utils {
 
-    fun Long?.formatDueDate(): String {
-        if (this == null) return "Chưa đặt"
+    fun formatDueDate(dateLong: Long?): String {
+        if (dateLong == null) return "Chưa đặt"
         val sdf = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault())
-        return sdf.format(Date(this))
+        return sdf.format(Date(dateLong))
     }
-    fun Long.formatCommentTimestamp(): String {
+    fun formatCommentTimestamp(dateLong: Long): String {
         val sdf = SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault())
-        return sdf.format(Date(this))
+        return sdf.format(Date(dateLong))
     }
 }
