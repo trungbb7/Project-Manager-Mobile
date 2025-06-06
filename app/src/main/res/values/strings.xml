@@ -1,3 +1,33 @@
 <resources>
     <string name="app_name">ProjectManagerApp</string>
+
+    <!-- Auth Strings -->
+    <string name="login">Đăng nhập</string>
+    <string name="register">Đăng ký</string>
+    <string name="email">Email</string>
+    <string name="password">Mật khẩu</string>
+    <string name="confirm_password">Xác nhận mật khẩu</string>
+    <string name="forgot_password">Quên mật khẩu?</string>
+    <string name="full_name">Họ và tên</string>
+    <string name="dont_have_account">Chưa có tài khoản?</string>
+    <string name="already_have_account">Đã có tài khoản?</string>
+    <string name="sign_up_now">Đăng ký ngay</string>
+    <string name="sign_in_now">Đăng nhập ngay</string>
+    <string name="or_continue_with">Hoặc tiếp tục với</string>
+    <string name="send_reset_link">Gửi link khôi phục</string>
+    <string name="reset_password_description">Nhập email của bạn và chúng tôi sẽ gửi link khôi phục mật khẩu</string>
+    <string name="back_to_login">Quay lại đăng nhập</string>
+    <string name="welcome_back">Chào mừng trở lại!</string>
+    <string name="create_account">Tạo tài khoản mới</string>
+    <string name="reset_password">Khôi phục mật khẩu</string>
+    
+    <!-- Home Screen -->
+    <string name="home">Trang chủ</string>
+    <string name="logout">Đăng xuất</string>
+    <string name="logout_confirmation">Bạn có chắc chắn muốn đăng xuất?</string>
+    <string name="yes">Có</string>
+    <string name="no">Không</string>
+    <string name="user_info">Thông tin người dùng</string>
+    <string name="welcome_user">Xin chào, %1$s!</string>
+    <string name="user_email">Email: %1$s</string>
 </resources>

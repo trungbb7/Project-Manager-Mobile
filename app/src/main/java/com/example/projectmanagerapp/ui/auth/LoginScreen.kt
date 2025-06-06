@@ -1,6 +1,7 @@
 package com.example.projectmanagerapp.ui.auth
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,11 +16,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -48,20 +49,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.projectmanagerapp.R
+import com.example.projectmanagerapp.ui.auth.components.SocialLoginButtons
 import com.example.projectmanagerapp.ui.theme.ProjectManagerAppTheme
 
 @Composable
-fun RegisterScreen(
-    onRegisterSuccess: () -> Unit = {},
-    onLoginClick: () -> Unit = {},
+fun LoginScreen(
+    onLoginSuccess: () -> Unit = {},
+    onRegisterClick: () -> Unit = {},
+    onForgotPasswordClick: () -> Unit = {},
+    onGoogleClick: () -> Unit = {},
+    onFacebookClick: () -> Unit = {},
     authViewModel: AuthViewModel = viewModel()
 ) {
-    var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var confirmPasswordVisible by remember { mutableStateOf(false) }
 
     val authState by authViewModel.authState.collectAsState()
     val isUserLoggedIn by authViewModel.isUserLoggedIn.collectAsState()
@@ -69,7 +71,7 @@ fun RegisterScreen(
 
     LaunchedEffect(isUserLoggedIn) {
         if (isUserLoggedIn) {
-            onRegisterSuccess()
+            onLoginSuccess()
         }
     }
 
@@ -107,7 +109,7 @@ fun RegisterScreen(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = stringResource(R.string.create_account),
+                    text = stringResource(R.string.welcome_back),
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -115,28 +117,11 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = stringResource(R.string.register),
+                    text = stringResource(R.string.login),
                     style = MaterialTheme.typography.titleLarge
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
-
-                OutlinedTextField(
-                    value = fullName,
-                    onValueChange = { fullName = it },
-                    label = { Text(stringResource(R.string.full_name)) },
-                    leadingIcon = {
-                        Icon(Icons.Default.Person, contentDescription = null)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Next
-                    ),
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
                     value = email,
@@ -174,48 +159,26 @@ fun RegisterScreen(
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Next
-                    ),
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = confirmPassword,
-                    onValueChange = { confirmPassword = it },
-                    label = { Text(stringResource(R.string.confirm_password)) },
-                    leadingIcon = {
-                        Icon(Icons.Default.Lock, contentDescription = null)
-                    },
-                    trailingIcon = {
-                        IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
-                            Icon(
-                                if (confirmPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password"
-                            )
-                        }
-                    },
-                    visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
                         imeAction = ImeAction.Done
                     ),
                     singleLine = true
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    TextButton(
+                        onClick = onForgotPasswordClick,
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                    ) {
+                        Text(stringResource(R.string.forgot_password))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
-                    onClick = {
-                        authViewModel.register(
-                            fullName,
-                            email,
-                            password,
-                            confirmPassword
-                        )
-                    },
+                    onClick = { authViewModel.login(email, password) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -227,7 +190,7 @@ fun RegisterScreen(
                             modifier = Modifier.size(24.dp)
                         )
                     } else {
-                        Text(stringResource(R.string.register))
+                        Text(stringResource(R.string.login))
                     }
                 }
 
@@ -239,13 +202,36 @@ fun RegisterScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = stringResource(R.string.already_have_account),
+                        text = stringResource(R.string.dont_have_account),
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    TextButton(onClick = onLoginClick) {
-                        Text(stringResource(R.string.sign_in_now))
+                    TextButton(onClick = onRegisterClick) {
+                        Text(stringResource(R.string.sign_up_now))
                     }
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Divider(modifier = Modifier.weight(1f))
+                    Text(
+                        text = stringResource(R.string.or_continue_with),
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Divider(modifier = Modifier.weight(1f))
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                SocialLoginButtons(
+                    onGoogleClick = onGoogleClick,
+                    onFacebookClick = onFacebookClick
+                )
             }
         }
     }
@@ -253,8 +239,8 @@ fun RegisterScreen(
 
 @Preview(showBackground = true)
 @Composable
-fun RegisterScreenPreview() {
+fun LoginScreenPreview() {
     ProjectManagerAppTheme {
-        RegisterScreen()
+        LoginScreen()
     }
 }
