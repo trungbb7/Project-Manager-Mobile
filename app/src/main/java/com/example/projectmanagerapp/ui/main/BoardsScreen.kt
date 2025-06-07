@@ -1,7 +1,6 @@
 package com.example.projectmanagerapp.ui.main
 
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -32,7 +31,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BoardsScreen(
@@ -40,17 +38,70 @@ fun BoardsScreen(
     onBoardClick: (Board) -> Unit,
     onAddBoardClick: () -> Unit,
     onSearchClick: () -> Unit,
-    onRenameBoardRequest: (Board) -> Unit,
+    onRenameBoardRequest: (String) -> Unit,
     onChangeBackgroundRequest: (Board) -> Unit,
     onDeleteBoardRequest: (Board) -> Unit
     // Thêm các callback khác nếu cần, ví dụ: onBoardOptionsClick: (Board) -> Unit
 ) {
 
+    var editBoardName by remember { mutableStateOf<String>("") }
+
     val uiState = viewModel.boardUIState.collectAsState()
 
     val boards = uiState.value.boards
-//    var showMenu by remember { mutableStateOf(false) }
-//    var selectedBoardForMenu by remember { mutableStateOf<Board?>(null) }
+    val error = uiState.value.error
+    val isLoading = uiState.value.idLoading
+
+    var editingBoard by remember { mutableStateOf(null as Board?) }
+
+    var openEditBoardNameDialog by remember { mutableStateOf(false) }
+
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(error) {
+        if (error != null) {
+            snackbarHostState.showSnackbar(message = error)
+            viewModel.clearError()
+        }
+    }
+
+    if (isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    if (openEditBoardNameDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                openEditBoardNameDialog = false
+            },
+            title = { Text(text = "Chỉnh sửa tên bảng") },
+
+            confirmButton = {
+                TextButton(onClick = {
+                    openEditBoardNameDialog = false
+
+                    if (!editBoardName.isBlank() && editingBoard != null) {
+                        viewModel.editBoardName(editingBoard!!, editBoardName)
+
+                    }
+                }
+                )
+                { Text("Lưu") }
+            },
+            dismissButton = {
+                TextButton(onClick = { openEditBoardNameDialog = false }) { Text("Hủy bỏ") }
+            },
+            text = {
+                TextField(
+                    value = editBoardName,
+                    onValueChange = { editBoardName = it },
+                )
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -92,8 +143,17 @@ fun BoardsScreen(
                 items(boards) { board ->
                     BoardItem(
                         board = board,
+                        onEditBoardNameClick = {
+                            editBoardName = board.name
+                            editingBoard = board
+                            openEditBoardNameDialog = true
+                        },
                         onClick = { onBoardClick(board) },
-                        onRenameBoardRequest = onRenameBoardRequest,
+                        onRenameBoardRequest = { newName ->
+                            if (newName != board.name) {
+                                viewModel.editBoardName(board, newName)
+                            }
+                        },
                         onChangeBackgroundRequest = onChangeBackgroundRequest,
                         onDeleteBoardRequest = onDeleteBoardRequest
                     )
@@ -109,13 +169,14 @@ fun BoardsScreen(
 @Composable
 fun BoardItem(
     board: Board,
+    onEditBoardNameClick: () -> Unit,
     onClick: () -> Unit,
-    onRenameBoardRequest: (Board) -> Unit,
+    onRenameBoardRequest: (String) -> Unit,
     onChangeBackgroundRequest: (Board) -> Unit,
     onDeleteBoardRequest: (Board) -> Unit
 ) {
 
-    var showItemMenu by remember { mutableStateOf(false)  }
+    var showItemMenu by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
@@ -151,7 +212,7 @@ fun BoardItem(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.3f)) // Điều chỉnh alpha tùy ý
+                    .background(Color.Black.copy(alpha = 0.3f))
             )
 
             // Tiêu đề bảng và nút tùy chọn
@@ -182,36 +243,36 @@ fun BoardItem(
                 }
 
                 // Dropdown Menu cho tùy chọn của bảng
-                    DropdownMenu(
-                        expanded = showItemMenu,
-                        onDismissRequest = { showItemMenu = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Đổi tên bảng") },
-                            onClick = {
-                                // Xử lý đổi tên
-                                showItemMenu = false
-                                onRenameBoardRequest(board)
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Thay đổi hình nền") },
-                            onClick = {
-                                // Xử lý thay đổi hình nền
-                                showItemMenu = false
-                                onChangeBackgroundRequest(board)
-                            }
-                        )
-                        HorizontalDivider()
-                        DropdownMenuItem(
-                            text = { Text("Xóa bảng", color = MaterialTheme.colorScheme.error) },
-                            onClick = {
-                                // Xử lý xóa bảng (cần có xác nhận)
-                                showItemMenu = false
-                                onDeleteBoardRequest(board)
-                            }
-                        )
-                    }
+                DropdownMenu(
+                    expanded = showItemMenu,
+                    onDismissRequest = { showItemMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Đổi tên bảng") },
+                        onClick = {
+                            // Xử lý đổi tên
+                            showItemMenu = false
+                            onEditBoardNameClick()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Thay đổi hình nền") },
+                        onClick = {
+                            // Xử lý thay đổi hình nền
+                            showItemMenu = false
+                            onChangeBackgroundRequest(board)
+                        }
+                    )
+                    HorizontalDivider()
+                    DropdownMenuItem(
+                        text = { Text("Xóa bảng", color = MaterialTheme.colorScheme.error) },
+                        onClick = {
+                            // Xử lý xóa bảng (cần có xác nhận)
+                            showItemMenu = false
+                            onDeleteBoardRequest(board)
+                        }
+                    )
+                }
             }
         }
     }

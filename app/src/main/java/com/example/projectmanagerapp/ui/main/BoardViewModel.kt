@@ -27,12 +27,38 @@ class BoardViewModel(
     }
 
     private fun getBoards() {
+        _boardUIState.value = _boardUIState.value.copy(idLoading = true)
         viewModelScope.launch {
-            repository.getBoards().collect { boards ->
+            try {
+                repository.getBoards().collect { boards ->
+                    _boardUIState.value = BoardUIState(
+                        boards = boards
+                    )
+                }
+            }catch (e: Exception) {
                 _boardUIState.value = BoardUIState(
-                    boards = boards
+                    error = e.message
                 )
             }
         }
+        _boardUIState.value = _boardUIState.value.copy(idLoading = false)
+    }
+
+    fun editBoardName(board: Board, newName: String) {
+        _boardUIState.value = _boardUIState.value.copy(idLoading = true)
+        viewModelScope.launch {
+            try {
+                repository.editBoardName(board, newName)
+            } catch (e: Exception) {
+                _boardUIState.value = BoardUIState(
+                    error = e.message
+                )
+            }
+        }
+        _boardUIState.value = _boardUIState.value.copy(idLoading = false)
+    }
+
+    fun clearError() {
+        _boardUIState.value  = _boardUIState.value.copy(error = "")
     }
 }

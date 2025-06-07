@@ -33,5 +33,12 @@ class RepositoryImplement: Repository {
 
     }
 
+    override suspend fun editBoardName(
+        board: Board,
+        newName: String
+    ) {
+        firestore.collection("boards").document(board.id).update("name", newName)
+    }
+
 
 }

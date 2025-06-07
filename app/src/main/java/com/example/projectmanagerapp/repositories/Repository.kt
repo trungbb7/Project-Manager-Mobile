@@ -11,6 +11,7 @@ interface Repository {
 
     fun getCurrentUser(): User
     fun getBoards(): Flow<List<Board>>
+    suspend fun editBoardName(board: Board, newName: String)
 
 //    fun getCard(boardId: String, listId: String, cardId: String): Flow<Card>
 //    fun getCheckList(boardId: String, listId: String, cardId: String): Flow<List<Checklist>>
