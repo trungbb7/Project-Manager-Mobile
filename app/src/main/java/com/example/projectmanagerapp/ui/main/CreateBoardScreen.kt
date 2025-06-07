@@ -2,6 +2,9 @@ package com.example.projectmanagerapp.ui.main
 
 
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,24 +23,27 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import androidx.core.graphics.toColorInt
+import com.example.projectmanagerapp.R
 
 // Dữ liệu mẫu cho màu nền
 val predefinedBackgroundColors = listOf(
-    Color(0xFF0079BF), // Trello Blue
-    Color(0xFFD29034), // Orange
-    Color(0xFF519839), // Green
-    Color(0xFFB04632), // Red
-    Color(0xFF89609E), // Purple
-    Color(0xFFCD5A91), // Pink
-    Color(0xFF4BBF6B), // Light Green
-    Color(0xFF00AECC), // Teal
-    Color(0xFF838C91)  // Gray
+    "#FF0079BF", // Trello Blue
+    "#FFD29034", // Orange
+    "#FF519839", // Green
+    "#FFB04632", // Red
+    "#FF89609E", // Purple
+    "#FFCD5A91", // Pink
+    "#FF4BBF6B", // Light Green
+    "#FF00AECC", // Teal
+    "#FF838C91"  // Gray
 )
 
 data class BackgroundImageOption(val id: String, val smallUrl: String, val fullUrl: String, val photographer: String)
@@ -55,17 +61,41 @@ enum class BackgroundType {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateBoardScreen(
+    viewModel: CreateBoardViewModel, // Nhận ViewModel
     onNavigateBack: () -> Unit,
-    onCreateBoard: (boardName: String, backgroundColor: Color?, backgroundImageUri: String?) -> Unit
+    onBoardCreatedSuccessfully: () -> Unit
 ) {
-    var boardName by remember { mutableStateOf("") }
-    var selectedBackgroundColor by remember { mutableStateOf(predefinedBackgroundColors.first()) }
-    var selectedBackgroundImage by remember { mutableStateOf<BackgroundImageOption?>(null) }
-    var backgroundType by remember { mutableStateOf(BackgroundType.COLOR) }
+    val uiState by viewModel.uiState.collectAsState()
 
-    val isCreateButtonEnabled = boardName.isNotBlank()
+    // --- Launcher để chọn ảnh ---
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+
+            viewModel.onImageSelected(uri)
+        }
+    )
+
+    var backgroundType: BackgroundType by remember { mutableStateOf(BackgroundType.COLOR) }
+
+    // Tự động điều hướng khi tạo bảng thành công
+    LaunchedEffect(uiState.success) {
+        if (uiState.success) {
+            onBoardCreatedSuccessfully()
+        }
+    }
+
+    // Hiển thị lỗi nếu có
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(uiState.error) {
+        if (uiState.error != null) {
+            snackbarHostState.showSnackbar(uiState.error!!)
+        }
+    }
+
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Tạo bảng mới") },
@@ -73,11 +103,7 @@ fun CreateBoardScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                }
             )
         }
     ) { paddingValues ->
@@ -90,42 +116,35 @@ fun CreateBoardScreen(
         ) {
             // --- Preview Bảng ---
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
-                    .padding(bottom = 16.dp),
-                shape = MaterialTheme.shapes.medium,
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).padding(bottom = 16.dp),
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (backgroundType == BackgroundType.IMAGE && selectedBackgroundImage != null) {
+                    val selectedUri = uiState.selectedImageUri
+                    if (selectedUri != null) {
                         AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(selectedBackgroundImage!!.smallUrl)
-                                .crossfade(true)
-                                .build(),
+                            model = selectedUri,
                             contentDescription = "Ảnh nền xem trước",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
-                        // Lớp phủ mờ để dễ đọc chữ trên ảnh
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(Color.Black.copy(alpha = 0.2f))
                         )
                     } else {
+                        // Hiển thị màu nền đã chọn
                         Spacer(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(selectedBackgroundColor)
+                                .background(Color(uiState.selectedBackgroundColor.toColorInt()))
                         )
                     }
                     Text(
-                        text = if (boardName.isNotBlank()) boardName else "Tên bảng",
+                        text = if (uiState.boardName.isNotBlank()) uiState.boardName else "Tên bảng",
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                         color = Color.White,
                         textAlign = TextAlign.Center,
@@ -136,8 +155,8 @@ fun CreateBoardScreen(
 
             // --- Tên Bảng ---
             OutlinedTextField(
-                value = boardName,
-                onValueChange = { boardName = it },
+                value = uiState.boardName,
+                onValueChange = { viewModel.onBoardNameChange(it) },
                 label = { Text("Tên bảng") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
@@ -159,8 +178,8 @@ fun CreateBoardScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- Chọn Màu Nền hoặc Ảnh Nền ---
-            when (backgroundType) {
+
+            when(backgroundType) {
                 BackgroundType.COLOR -> {
                     Text("Chọn màu nền:", style = MaterialTheme.typography.titleSmall)
                     Spacer(modifier = Modifier.height(8.dp))
@@ -171,54 +190,56 @@ fun CreateBoardScreen(
                         items(predefinedBackgroundColors) { color ->
                             ColorPickerItem(
                                 color = color,
-                                isSelected = selectedBackgroundColor == color && backgroundType == BackgroundType.COLOR,
+                                isSelected = uiState.selectedBackgroundColor == color && backgroundType == BackgroundType.COLOR,
                                 onClick = {
-                                    selectedBackgroundColor = color
+                                    viewModel.onBackgroundColorChange(color.toString())
                                     backgroundType = BackgroundType.COLOR
                                 }
                             )
                         }
                     }
                 }
+
                 BackgroundType.IMAGE -> {
-                    Text("Chọn ảnh nền:", style = MaterialTheme.typography.titleSmall)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    // --- Nút chọn ảnh ---
+                    Button(
+                        onClick = {
+                            // Mở Photo Picker của Android
+                            photoPickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        items(predefinedBackgroundImages) { imageOption ->
-                            ImagePickerItem(
-                                imageOption = imageOption,
-                                isSelected = selectedBackgroundImage?.id == imageOption.id && backgroundType == BackgroundType.IMAGE,
-                                onClick = {
-                                    selectedBackgroundImage = imageOption
-                                    backgroundType = BackgroundType.IMAGE
-                                }
-                            )
-                        }
-//                        TODO: Upload Image Button
+                        Icon(painterResource(id = R.drawable.outline_image_24), contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Chọn ảnh nền từ thư viện")
                     }
                 }
             }
+
+
+
 
             Spacer(modifier = Modifier.weight(1f))
 
             // --- Nút Tạo Bảng ---
             Button(
-                onClick = {
-                    if (isCreateButtonEnabled) {
-                        val bgColor = if (backgroundType == BackgroundType.COLOR) selectedBackgroundColor else null
-                        val bgImage = if (backgroundType == BackgroundType.IMAGE) selectedBackgroundImage?.fullUrl else null
-                        onCreateBoard(boardName, bgColor, bgImage)
-                    }
-                },
-                enabled = isCreateButtonEnabled,
+                onClick = { viewModel.createBoard() },
+                enabled = uiState.boardName.isNotBlank() && !uiState.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Text("Tạo bảng")
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Tạo bảng")
+                }
             }
         }
     }
@@ -226,7 +247,7 @@ fun CreateBoardScreen(
 
 @Composable
 fun ColorPickerItem(
-    color: Color,
+    color: String,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
@@ -234,7 +255,7 @@ fun ColorPickerItem(
         modifier = Modifier
             .size(48.dp)
             .clip(CircleShape)
-            .background(color)
+            .background(Color(color.toColorInt()))
             .clickable(onClick = onClick)
             .then(
                 if (isSelected) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape) else Modifier
@@ -270,52 +291,52 @@ fun ImagePickerItem(
 }
 
 
-@Preview(showBackground = true, name = "Create Board Screen")
-@Composable
-fun CreateBoardScreenPreview() {
-    MaterialTheme { // Cần MaterialTheme để preview đúng
-        CreateBoardScreen(
-            onNavigateBack = {},
-            onCreateBoard = { name, color, imageUri ->
-                println("Board Created: Name=$name, Color=$color, ImageUri=$imageUri")
-            }
-        )
-    }
-}
+//@Preview(showBackground = true, name = "Create Board Screen")
+//@Composable
+//fun CreateBoardScreenPreview() {
+//    MaterialTheme { // Cần MaterialTheme để preview đúng
+//        CreateBoardScreen(
+//            onNavigateBack = {},
+//            onCreateBoard = { name, color, imageUri ->
+//                println("Board Created: Name=$name, Color=$color, ImageUri=$imageUri")
+//            }
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true, name = "Create Board Screen - Dark Theme")
+//@Composable
+//fun CreateBoardScreenDarkPreview() {
+//    MaterialTheme(colorScheme = darkColorScheme()) { // Sử dụng darkColorScheme
+//        CreateBoardScreen(
+//            onNavigateBack = {},
+//            onCreateBoard = { name, color, imageUri ->
+//                println("Board Created: Name=$name, Color=$color, ImageUri=$imageUri")
+//            }
+//        )
+//    }
+//}
 
-@Preview(showBackground = true, name = "Create Board Screen - Dark Theme")
-@Composable
-fun CreateBoardScreenDarkPreview() {
-    MaterialTheme(colorScheme = darkColorScheme()) { // Sử dụng darkColorScheme
-        CreateBoardScreen(
-            onNavigateBack = {},
-            onCreateBoard = { name, color, imageUri ->
-                println("Board Created: Name=$name, Color=$color, ImageUri=$imageUri")
-            }
-        )
-    }
-}
+//@Preview(showBackground = true, name = "Color Picker Item Selected")
+//@Composable
+//fun ColorPickerItemSelectedPreview() {
+//    MaterialTheme {
+//        ColorPickerItem(color = Color.Blue, isSelected = true, onClick = {})
+//    }
+//}
+//
+//@Preview(showBackground = true, name = "Color Picker Item Not Selected")
+//@Composable
+//fun ColorPickerItemNotSelectedPreview() {
+//    MaterialTheme {
+//        ColorPickerItem(color = Color.Green, isSelected = false, onClick = {})
+//    }
+//}
 
-@Preview(showBackground = true, name = "Color Picker Item Selected")
-@Composable
-fun ColorPickerItemSelectedPreview() {
-    MaterialTheme {
-        ColorPickerItem(color = Color.Blue, isSelected = true, onClick = {})
-    }
-}
-
-@Preview(showBackground = true, name = "Color Picker Item Not Selected")
-@Composable
-fun ColorPickerItemNotSelectedPreview() {
-    MaterialTheme {
-        ColorPickerItem(color = Color.Green, isSelected = false, onClick = {})
-    }
-}
-
-@Preview(showBackground = true, name = "Image Picker Item Selected")
-@Composable
-fun ImagePickerItemSelectedPreview() {
-    MaterialTheme {
-        ImagePickerItem(imageOption = predefinedBackgroundImages.first(), isSelected = true, onClick = {})
-    }
-}
+//@Preview(showBackground = true, name = "Image Picker Item Selected")
+//@Composable
+//fun ImagePickerItemSelectedPreview() {
+//    MaterialTheme {
+//        ImagePickerItem(imageOption = predefinedBackgroundImages.first(), isSelected = true, onClick = {})
+//    }
+//}

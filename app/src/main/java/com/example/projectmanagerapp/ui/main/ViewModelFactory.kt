@@ -12,3 +12,11 @@ class BoardViewModelFactory(
     }
 }
 
+class CreateBoardViewModelFactory(
+    private val repository: Repository
+): ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return CreateBoardViewModel(repository) as T
+    }
+}
+

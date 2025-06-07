@@ -10,3 +10,12 @@ object AppDestinations {
     const val REGISTER_ROUTE = "register"
     const val DEMO = "demo"
 }
+
+
+object Constants {
+    const val USER_COLLECTION = "users"
+    const val BOARD_COLLECTION = "boards"
+    const val CARD_COLLECTION = "cards"
+
+    const val BOARD_BACKGROUND_REF = "board_backgrounds"
+}

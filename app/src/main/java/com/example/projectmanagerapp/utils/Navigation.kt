@@ -26,7 +26,9 @@ import com.example.projectmanagerapp.ui.main.ChecklistItem
 import com.example.projectmanagerapp.ui.main.Comment
 import com.example.projectmanagerapp.ui.main.CreateBoardScreen
 import com.example.projectmanagerapp.ui.main.HomeScreen
-import com.example.projectmanagerapp.ui.main.RepositoryImplement
+import com.example.projectmanagerapp.repositories.RepositoryImplement
+import com.example.projectmanagerapp.ui.main.CreateBoardViewModel
+import com.example.projectmanagerapp.ui.main.CreateBoardViewModelFactory
 import com.example.projectmanagerapp.ui.theme.ProjectManagerAppTheme
 import kotlin.collections.plus
 import kotlin.collections.toMutableList
@@ -68,11 +70,15 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             ) { }
         }
         composable(AppDestinations.CREATE_BOARD_ROUTE) {
+            val repository = RepositoryImplement()
+            val viewModel: CreateBoardViewModel = viewModel(factory = CreateBoardViewModelFactory(repository))
             CreateBoardScreen(onNavigateBack = {
                 navController.popBackStack()
             },
-                onCreateBoard = { boardName, backgroundColor, backgroundImageUri ->
-                })
+                onBoardCreatedSuccessfully = {
+                    navController.popBackStack()
+                },
+                viewModel = viewModel)
         }
 
 //        composable(AppDestinations.BOARD_DETAIL_ROUTE) {
