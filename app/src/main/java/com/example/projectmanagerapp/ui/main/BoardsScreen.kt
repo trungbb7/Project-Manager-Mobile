@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.toColorInt
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 
@@ -35,7 +36,7 @@ import coil.request.ImageRequest
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BoardsScreen(
-    boards: List<Board>,
+    viewModel: BoardViewModel,
     onBoardClick: (Board) -> Unit,
     onAddBoardClick: () -> Unit,
     onSearchClick: () -> Unit,
@@ -44,6 +45,10 @@ fun BoardsScreen(
     onDeleteBoardRequest: (Board) -> Unit
     // Thêm các callback khác nếu cần, ví dụ: onBoardOptionsClick: (Board) -> Unit
 ) {
+
+    val uiState = viewModel.boardUIState.collectAsState()
+
+    val boards = uiState.value.boards
 //    var showMenu by remember { mutableStateOf(false) }
 //    var selectedBoardForMenu by remember { mutableStateOf<Board?>(null) }
 
@@ -115,7 +120,7 @@ fun BoardItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1.5f) // Tỷ lệ khung hình cho mỗi bảng
+            .aspectRatio(1.5f)
             .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.medium,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -138,7 +143,7 @@ fun BoardItem(
                 Spacer(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(board.backgroundColor)
+                        .background(Color(board.backgroundColor.toColorInt()))
                 )
             }
 
@@ -247,54 +252,54 @@ fun EmptyBoardsView(modifier: Modifier = Modifier) {
 
 
 // --- Preview ---
-@Preview(showBackground = true, name = "Boards Screen - With Data")
-@Composable
-fun BoardsScreenPreview() {
-    val sampleBoards = listOf(
-        Board("1", "Dự án cá nhân", backgroundImage = "https://picsum.photos/seed/projectA/600/400", backgroundColor = Color(0xFF4CAF50)),
-        Board("2", "Kế hoạch du lịch hè 2025", backgroundColor = Color(0xFF2196F3)),
-        Board("3", "Học Jetpack Compose", backgroundImage = "https://picsum.photos/seed/compose/600/400", backgroundColor = Color(0xFFFFC107)),
-        Board("4", "Công việc công ty", backgroundColor = Color(0xFF9C27B0))
-    )
-    MaterialTheme { // Cần có MaterialTheme để preview hoạt động đúng
-        BoardsScreen(
-            boards = sampleBoards,
-            onBoardClick = {},
-            onAddBoardClick = {},
-            onSearchClick = {},
-            onRenameBoardRequest ={},
-            onChangeBackgroundRequest ={},
-            onDeleteBoardRequest ={},
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Boards Screen - Empty")
-@Composable
-fun EmptyBoardsScreenPreview() {
-    MaterialTheme {
-        BoardsScreen(
-            boards = emptyList(),
-            onBoardClick = {},
-            onAddBoardClick = {},
-            onSearchClick = {},
-            onRenameBoardRequest ={},
-            onChangeBackgroundRequest ={},
-            onDeleteBoardRequest ={},
-        )
-    }
-}
-
-@Preview(showBackground = true, name = "Board Item Preview")
-@Composable
-fun BoardItemPreview() {
-    MaterialTheme {
-        BoardItem(
-            board = Board("1", "Dự án phát triển App Siêu Tốc Độ Cao", backgroundImage = "https://picsum.photos/seed/preview/600/400"),
-            onClick = {},
-            onRenameBoardRequest ={},
-            onChangeBackgroundRequest ={},
-            onDeleteBoardRequest ={},
-        )
-    }
-}
+//@Preview(showBackground = true, name = "Boards Screen - With Data")
+//@Composable
+//fun BoardsScreenPreview() {
+//    val sampleBoards = listOf(
+//        Board("1", "Dự án cá nhân", backgroundImage = "https://picsum.photos/seed/projectA/600/400", backgroundColor = "#FF4CAF50"),
+//        Board("2", "Kế hoạch du lịch hè 2025", backgroundColor = "#FF2196F3"),
+//        Board("3", "Học Jetpack Compose", backgroundImage = "https://picsum.photos/seed/compose/600/400", backgroundColor = "#FFFFC107"),
+//        Board("4", "Công việc công ty", backgroundColor = "#FF9C27B0")
+//    )
+//    MaterialTheme { // Cần có MaterialTheme để preview hoạt động đúng
+//        BoardsScreen(
+//            boards = sampleBoards,
+//            onBoardClick = {},
+//            onAddBoardClick = {},
+//            onSearchClick = {},
+//            onRenameBoardRequest ={},
+//            onChangeBackgroundRequest ={},
+//            onDeleteBoardRequest ={},
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true, name = "Boards Screen - Empty")
+//@Composable
+//fun EmptyBoardsScreenPreview() {
+//    MaterialTheme {
+//        BoardsScreen(
+//            boards = emptyList(),
+//            onBoardClick = {},
+//            onAddBoardClick = {},
+//            onSearchClick = {},
+//            onRenameBoardRequest ={},
+//            onChangeBackgroundRequest ={},
+//            onDeleteBoardRequest ={},
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true, name = "Board Item Preview")
+//@Composable
+//fun BoardItemPreview() {
+//    MaterialTheme {
+//        BoardItem(
+//            board = Board("1", "Dự án phát triển App Siêu Tốc Độ Cao", backgroundImage = "https://picsum.photos/seed/preview/600/400"),
+//            onClick = {},
+//            onRenameBoardRequest ={},
+//            onChangeBackgroundRequest ={},
+//            onDeleteBoardRequest ={},
+//        )
+//    }
+//}
