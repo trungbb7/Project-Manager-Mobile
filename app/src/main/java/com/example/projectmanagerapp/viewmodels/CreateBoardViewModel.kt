@@ -1,10 +1,11 @@
-package com.example.projectmanagerapp.ui.main.viewmodels
+package com.example.projectmanagerapp.viewmodels
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projectmanagerapp.repositories.Repository
 import com.example.projectmanagerapp.ui.main.Board
+import com.example.projectmanagerapp.utils.BackgroundType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +18,7 @@ data class CreateBoardState(
     val ownerId: String = "",
     val selectedImageUri: Uri? = null,
     val selectedBackgroundColor: String = "#0079BF",
+    val backgroundType: BackgroundType = BackgroundType.COLOR,
     val error: String? = null,
     val isLoading: Boolean = false,
     val success: Boolean = false
@@ -32,11 +34,11 @@ class CreateBoardViewModel(
     val uiState: StateFlow<CreateBoardState> = _uiState.asStateFlow()
 
     fun onImageSelected(uri: Uri?) {
-        _uiState.value = _uiState.value.copy(selectedImageUri = uri)
+        _uiState.value = _uiState.value.copy(selectedImageUri = uri, backgroundType = BackgroundType.IMAGE)
     }
 
     fun onBackgroundColorChange(color: String) {
-        _uiState.value = _uiState.value.copy(selectedBackgroundColor = color)
+        _uiState.value = _uiState.value.copy(selectedBackgroundColor = color, backgroundType = BackgroundType.COLOR)
     }
 
     fun onBoardNameChange(name: String) {
@@ -52,8 +54,11 @@ class CreateBoardViewModel(
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
             try{
-                val imageUrl: String? =  _uiState.value.selectedImageUri?.let {
-                    repository.uploadBoardBackgroundImage(it)
+                var imageUrl: String? = null
+                if(_uiState.value.backgroundType == BackgroundType.IMAGE) {
+                    imageUrl =  _uiState.value.selectedImageUri?.let {
+                        repository.uploadBoardBackgroundImage(it)
+                    }
                 }
 
                 val currentUserId = repository.getCurrentUser().id
@@ -72,7 +77,10 @@ class CreateBoardViewModel(
             }
         }
 
-
     }
 
+    fun onChangeBackgroundType(type: BackgroundType) {
+        _uiState.value = _uiState.value.copy(backgroundType = type)
+
+    }
 }

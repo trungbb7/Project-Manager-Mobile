@@ -1,4 +1,4 @@
-package com.example.projectmanagerapp.ui.main.viewmodels
+package com.example.projectmanagerapp.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,7 +18,6 @@ class BoardViewModel(
     val repository: Repository
 ): ViewModel() {
 
-
     private val _boardUIState = MutableStateFlow(BoardUIState())
     val boardUIState = _boardUIState.asStateFlow()
 
@@ -32,7 +31,8 @@ class BoardViewModel(
             try {
                 repository.getBoards().collect { boards ->
                     _boardUIState.value = BoardUIState(
-                        boards = boards
+                        boards = boards,
+                        idLoading = false
                     )
                 }
             }catch (e: Exception) {
@@ -41,7 +41,6 @@ class BoardViewModel(
                 )
             }
         }
-        _boardUIState.value = _boardUIState.value.copy(idLoading = false)
     }
 
     fun editBoardName(board: Board, newName: String) {
@@ -56,6 +55,19 @@ class BoardViewModel(
             }
         }
         _boardUIState.value = _boardUIState.value.copy(idLoading = false)
+    }
+
+    fun deleteBoard(boardId: String) {
+        _boardUIState.value = _boardUIState.value.copy(idLoading = true)
+
+        viewModelScope.launch {
+            try {
+                repository.deleteBoard(boardId)
+                _boardUIState.value = _boardUIState.value.copy(idLoading = false)
+            } catch (e: Exception) {
+                _boardUIState.value = _boardUIState.value.copy(error = e.message, idLoading = false)
+            }
+        }
     }
 
     fun clearError() {

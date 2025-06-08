@@ -1,6 +1,5 @@
 package com.example.projectmanagerapp.ui.main.screens
 
-import android.util.Log
 import androidx.compose.foundation.lazy.items
 
 
@@ -27,7 +26,7 @@ import coil.compose.AsyncImage
 import androidx.core.graphics.toColorInt
 import coil.request.ImageRequest
 import com.example.projectmanagerapp.R
-import com.example.projectmanagerapp.ui.main.viewmodels.EditBoardViewModel
+import com.example.projectmanagerapp.viewmodels.EditBoardViewModel
 import com.example.projectmanagerapp.utils.BackgroundType
 import com.example.projectmanagerapp.utils.Constants
 
@@ -50,10 +49,7 @@ fun EditBoardScreen(
         }
     )
 
-    val backgroundImageUri = uiState.selectedImageUri
-
-    val boardName = uiState.boardName
-    val prevBoardName = uiState.prevBoardName
+    var isSelectedBackgroundColor by remember { mutableStateOf(false) }
 
 
     var backgroundType = uiState.backGroundType
@@ -197,6 +193,7 @@ fun EditBoardScreen(
                                 onClick = {
                                     viewModel.onBackgroundColorChange(color.toString())
                                     viewModel.onBackgroundTypeChange(BackgroundType.COLOR)
+                                    isSelectedBackgroundColor = true
                                 }
                             )
                         }
@@ -233,7 +230,7 @@ fun EditBoardScreen(
                 onClick = { viewModel.updateBoard() },
                 enabled = uiState.boardName.isNotBlank()
                         && !uiState.isLoading
-                        && (uiState.selectedImageUri != null || uiState.selectedBackgroundColor.isNotBlank() || boardName != prevBoardName),
+                        && (uiState.selectedImageUri != null || isSelectedBackgroundColor || uiState.boardName != uiState.prevBoardName),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)

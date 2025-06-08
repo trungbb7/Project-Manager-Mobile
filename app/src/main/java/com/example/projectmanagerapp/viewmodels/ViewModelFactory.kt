@@ -1,4 +1,4 @@
-package com.example.projectmanagerapp.ui.main.viewmodels
+package com.example.projectmanagerapp.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

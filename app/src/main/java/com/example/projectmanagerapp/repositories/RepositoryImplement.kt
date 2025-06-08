@@ -1,6 +1,7 @@
 package com.example.projectmanagerapp.repositories
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.ui.unit.Constraints
 import com.example.projectmanagerapp.ui.main.Board
 import com.example.projectmanagerapp.ui.main.User
@@ -37,6 +38,7 @@ class RepositoryImplement: Repository {
                     return@addSnapshotListener
                 }
                 if (snapshot != null) {
+                    Log.d("Firestoreddd", "Snapshot size: ${snapshot.documents.size}")
                     val users = snapshot.documents.mapNotNull { it.toObject(Board::class.java) }
                     trySend(users)
                 }
@@ -44,6 +46,8 @@ class RepositoryImplement: Repository {
         awaitClose { listener.remove() }
 
     }
+
+
 
     override suspend fun editBoardName(
         board: Board,
@@ -70,6 +74,10 @@ class RepositoryImplement: Repository {
 
     override suspend fun updateBoard(boardId: String, data: HashMap<String, Any?>) {
         firestore.collection(Constants.BOARD_COLLECTION).document(boardId).update(data).await()
+    }
+
+    override suspend fun deleteBoard(boardId: String) {
+        firestore.collection(Constants.BOARD_COLLECTION).document(boardId).delete().await()
     }
 
 

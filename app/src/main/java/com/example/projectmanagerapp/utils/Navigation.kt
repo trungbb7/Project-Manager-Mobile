@@ -11,17 +11,17 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.projectmanagerapp.ui.auth.LoginScreen
 import com.example.projectmanagerapp.ui.auth.RegisterScreen
-import com.example.projectmanagerapp.ui.main.viewmodels.BoardViewModel
-import com.example.projectmanagerapp.ui.main.viewmodels.BoardViewModelFactory
+import com.example.projectmanagerapp.viewmodels.BoardViewModel
+import com.example.projectmanagerapp.viewmodels.BoardViewModelFactory
 import com.example.projectmanagerapp.ui.main.screens.BoardsScreen
 import com.example.projectmanagerapp.ui.main.screens.CreateBoardScreen
 import com.example.projectmanagerapp.ui.main.HomeScreen
 import com.example.projectmanagerapp.repositories.RepositoryImplement
 import com.example.projectmanagerapp.ui.main.screens.EditBoardScreen
-import com.example.projectmanagerapp.ui.main.viewmodels.CreateBoardViewModel
-import com.example.projectmanagerapp.ui.main.viewmodels.CreateBoardViewModelFactory
-import com.example.projectmanagerapp.ui.main.viewmodels.EditBoardViewModel
-import com.example.projectmanagerapp.ui.main.viewmodels.EditBoardViewModelFactory
+import com.example.projectmanagerapp.viewmodels.CreateBoardViewModel
+import com.example.projectmanagerapp.viewmodels.CreateBoardViewModelFactory
+import com.example.projectmanagerapp.viewmodels.EditBoardViewModel
+import com.example.projectmanagerapp.viewmodels.EditBoardViewModelFactory
 
 
 @Composable

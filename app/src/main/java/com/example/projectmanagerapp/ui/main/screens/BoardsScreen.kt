@@ -24,10 +24,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.projectmanagerapp.ui.main.Board
-import com.example.projectmanagerapp.ui.main.viewmodels.BoardViewModel
+import com.example.projectmanagerapp.viewmodels.BoardViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,20 +42,18 @@ fun BoardsScreen(
     onChangeBackgroundRequest: (Board) -> Unit,
     onDeleteBoardRequest: (Board) -> Unit,
     onEditBoard: (String) -> Unit
-    // Thêm các callback khác nếu cần, ví dụ: onBoardOptionsClick: (Board) -> Unit
 ) {
 
-    var editBoardName by remember { mutableStateOf<String>("") }
 
     val uiState = viewModel.boardUIState.collectAsState()
 
-    val boards = uiState.value.boards
     val error = uiState.value.error
     val isLoading = uiState.value.idLoading
 
-    var editingBoard by remember { mutableStateOf(null as Board?) }
+    var deleteBoardId by remember { mutableStateOf<String?>(null) }
 
-    var openEditBoardNameDialog by remember { mutableStateOf(false) }
+
+    var openDeleteBoardDialog by remember { mutableStateOf(false) }
 
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -72,33 +71,27 @@ fun BoardsScreen(
         return
     }
 
-    if (openEditBoardNameDialog) {
+    if (openDeleteBoardDialog) {
         AlertDialog(
             onDismissRequest = {
-                openEditBoardNameDialog = false
+                openDeleteBoardDialog = false
             },
-            title = { Text(text = "Chỉnh sửa tên bảng") },
+            title = { Text(text = "Cảnh báo") },
 
             confirmButton = {
                 TextButton(onClick = {
-                    openEditBoardNameDialog = false
+                    openDeleteBoardDialog = false
 
-                    if (!editBoardName.isBlank() && editingBoard != null) {
-                        viewModel.editBoardName(editingBoard!!, editBoardName)
-
-                    }
+                    viewModel.deleteBoard(deleteBoardId!!)
                 }
                 )
-                { Text("Lưu") }
+                { Text("Xóa", color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { openEditBoardNameDialog = false }) { Text("Hủy bỏ") }
+                TextButton(onClick = { openDeleteBoardDialog = false }) { Text("Hủy bỏ") }
             },
             text = {
-                TextField(
-                    value = editBoardName,
-                    onValueChange = { editBoardName = it },
-                )
+                Text("Bạn có chắc chắn muốn xóa bảng này?")
             }
         )
     }
@@ -128,11 +121,11 @@ fun BoardsScreen(
             }
         }
     ) { paddingValues ->
-        if (boards.isEmpty()) {
+        if (uiState.value.boards.isEmpty()) {
             EmptyBoardsView(modifier = Modifier.padding(paddingValues))
         } else {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(2), // Hiển thị 2 bảng trên một hàng
+                columns = GridCells.Fixed(2),
                 contentPadding = paddingValues,
                 modifier = Modifier
                     .fillMaxSize()
@@ -140,15 +133,11 @@ fun BoardsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(boards) { board ->
+                items(uiState.value.boards) { board ->
                     BoardItem(
                         board = board,
                         onEditBoardClick = {
-//                            editBoardName = board.name
-//                            editingBoard = board
-//                            openEditBoardNameDialog = true
                             onEditBoard(board.id)
-
                         },
                         onClick = { onBoardClick(board) },
                         onRenameBoardRequest = { newName ->
@@ -157,12 +146,15 @@ fun BoardsScreen(
                             }
                         },
                         onChangeBackgroundRequest = onChangeBackgroundRequest,
-                        onDeleteBoardRequest = onDeleteBoardRequest
+                        onDeleteBoardRequest = onDeleteBoardRequest,
+                        onDeleteBoardClick = { boardId ->
+                            deleteBoardId = boardId
+                            openDeleteBoardDialog = true
+                        }
                     )
                 }
             }
         }
-
 
     }
 }
@@ -175,6 +167,7 @@ fun BoardItem(
     onClick: () -> Unit,
     onRenameBoardRequest: (String) -> Unit,
     onChangeBackgroundRequest: (Board) -> Unit,
+    onDeleteBoardClick: (String) -> Unit,
     onDeleteBoardRequest: (Board) -> Unit
 ) {
 
@@ -263,7 +256,7 @@ fun BoardItem(
                         onClick = {
                             // Xử lý xóa bảng (cần có xác nhận)
                             showItemMenu = false
-                            onDeleteBoardRequest(board)
+                            onDeleteBoardClick(board.id)
                         }
                     )
                 }

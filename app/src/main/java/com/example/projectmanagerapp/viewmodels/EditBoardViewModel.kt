@@ -1,4 +1,4 @@
-package com.example.projectmanagerapp.ui.main.viewmodels
+package com.example.projectmanagerapp.viewmodels
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -86,25 +86,37 @@ class EditBoardViewModel(private val repository: Repository, private val boardId
                     repository.uploadBoardBackgroundImage(it)
                 }
 
-
                 var data = hashMapOf<String, Any?>()
 
-                if (_uiState.value.selectedImageUri == null) {
+                if (_uiState.value.backGroundType == BackgroundType.COLOR) {
                     data = hashMapOf<String, Any?>(
                         "name" to _uiState.value.boardName,
                         "backgroundColor" to _uiState.value.selectedBackgroundColor,
                         "backgroundImage" to null
                     )
                 } else {
-                    if(imageUrl == null) {
+                    if(imageUrl != null) {
+                        data = hashMapOf<String, Any?>(
+                            "name" to _uiState.value.boardName,
+                            "backgroundColor" to _uiState.value.selectedBackgroundColor,
+                            "backgroundImage" to imageUrl
+                        )
+                    }
+                    else if(_uiState.value.selectedImageUri != null) {
                         _uiState.value = _uiState.value.copy(error = "Không thể tải ảnh nền bảng", isLoading = false)
                         return@launch
                     }
-                    data = hashMapOf<String, Any?>(
-                        "name" to _uiState.value.boardName,
-                        "backgroundColor" to _uiState.value.selectedBackgroundColor,
-                        "backgroundImage" to imageUrl
-                    )
+                    else if(_uiState.value.selectedImageUri == null && _uiState.value.prevBackgroundImage == null){
+                        _uiState.value = _uiState.value.copy(error = "Vui lòng chọn ảnh nền bảng", isLoading = false)
+                        return@launch
+                    }
+                    else if(_uiState.value.selectedImageUri == null && _uiState.value.prevBackgroundImage != null){
+                        data = hashMapOf<String, Any?>(
+                            "name" to _uiState.value.boardName,
+                            "backgroundColor" to _uiState.value.selectedBackgroundColor,
+                            "backgroundImage" to _uiState.value.prevBackgroundImage
+                        )
+                    }
                 }
 
                 repository.updateBoard(boardId, data)
