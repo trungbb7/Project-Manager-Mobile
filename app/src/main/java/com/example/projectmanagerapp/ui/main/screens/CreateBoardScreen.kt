@@ -1,4 +1,4 @@
-package com.example.projectmanagerapp.ui.main
+package com.example.projectmanagerapp.ui.main.screens
 
 
 
@@ -26,42 +26,24 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.core.graphics.toColorInt
 import com.example.projectmanagerapp.R
+import com.example.projectmanagerapp.ui.main.viewmodels.CreateBoardViewModel
+import com.example.projectmanagerapp.utils.BackgroundType
+import com.example.projectmanagerapp.utils.Constants
 
-// Dữ liệu mẫu cho màu nền
-val predefinedBackgroundColors = listOf(
-    "#FF0079BF", // Trello Blue
-    "#FFD29034", // Orange
-    "#FF519839", // Green
-    "#FFB04632", // Red
-    "#FF89609E", // Purple
-    "#FFCD5A91", // Pink
-    "#FF4BBF6B", // Light Green
-    "#FF00AECC", // Teal
-    "#FF838C91"  // Gray
-)
 
 data class BackgroundImageOption(val id: String, val smallUrl: String, val fullUrl: String, val photographer: String)
-val predefinedBackgroundImages = listOf(
-    BackgroundImageOption("1", "https://images.unsplash.com/photo-1604147706283-d7119b5b822c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzMzA5fDB8MXxjb2xsZWN0aW9ufDF8fHx8fHx8fDE2MjA0ODQ0MjZ8&ixlib=rb-4.0.3&q=80&w=400", "https://images.unsplash.com/photo-1604147706283-d7119b5b822c?ixlib=rb-4.0.3&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=2000", "Scott Webb"),
-    BackgroundImageOption("2", "https://images.unsplash.com/photo-1553095066-5014bc7b7f2d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzMzA5fDB8MXxjb2xsZWN0aW9ufDJ8fHx8fHx8fDE2MjA0ODQ0MjZ8&ixlib=rb-4.0.3&q=80&w=400", "https://images.unsplash.com/photo-1553095066-5014bc7b7f2d?ixlib=rb-4.0.3&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=2000", "Gradienta"),
-    BackgroundImageOption("3", "https://images.unsplash.com/photo-1500964757637-c85e8a162699?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzMzA5fDB8MXxjb2xsZWN0aW9ufDR8fHx8fHx8fDE2MjA0ODQ0MjZ8&ixlib=rb-4.0.3&q=80&w=400", "https://images.unsplash.com/photo-1500964757637-c85e8a162699?ixlib=rb-4.0.3&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=2000", "eberhard grossgasteiger"),
-    BackgroundImageOption("4", "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzMzA5fDB8MXxjb2xsZWN0aW9ufDE0fHx8fHx8fDE2MjA0ODQ0MjZ8&ixlib=rb-4.0.3&q=80&w=400", "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-4.0.3&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=2000", "Gradienta")
-)
 
-enum class BackgroundType {
-    COLOR, IMAGE
-}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateBoardScreen(
-    viewModel: CreateBoardViewModel, // Nhận ViewModel
+    viewModel: CreateBoardViewModel,
     onNavigateBack: () -> Unit,
     onBoardCreatedSuccessfully: () -> Unit
 ) {
@@ -187,7 +169,7 @@ fun CreateBoardScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        items(predefinedBackgroundColors) { color ->
+                        items(Constants.predefinedBackgroundColors) { color ->
                             ColorPickerItem(
                                 color = color,
                                 isSelected = uiState.selectedBackgroundColor == color && backgroundType == BackgroundType.COLOR,
@@ -262,81 +244,3 @@ fun ColorPickerItem(
             )
     )
 }
-
-@Composable
-fun ImagePickerItem(
-    imageOption: BackgroundImageOption,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .size(width = 80.dp, height = 60.dp)
-            .clickable(onClick = onClick)
-            .then(
-                if (isSelected) Modifier.border(3.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp)) else Modifier
-            ),
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(imageOption.smallUrl)
-                .crossfade(true)
-                .build(),
-            contentDescription = "Tùy chọn ảnh nền ${imageOption.photographer}",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-    }
-}
-
-
-//@Preview(showBackground = true, name = "Create Board Screen")
-//@Composable
-//fun CreateBoardScreenPreview() {
-//    MaterialTheme { // Cần MaterialTheme để preview đúng
-//        CreateBoardScreen(
-//            onNavigateBack = {},
-//            onCreateBoard = { name, color, imageUri ->
-//                println("Board Created: Name=$name, Color=$color, ImageUri=$imageUri")
-//            }
-//        )
-//    }
-//}
-//
-//@Preview(showBackground = true, name = "Create Board Screen - Dark Theme")
-//@Composable
-//fun CreateBoardScreenDarkPreview() {
-//    MaterialTheme(colorScheme = darkColorScheme()) { // Sử dụng darkColorScheme
-//        CreateBoardScreen(
-//            onNavigateBack = {},
-//            onCreateBoard = { name, color, imageUri ->
-//                println("Board Created: Name=$name, Color=$color, ImageUri=$imageUri")
-//            }
-//        )
-//    }
-//}
-
-//@Preview(showBackground = true, name = "Color Picker Item Selected")
-//@Composable
-//fun ColorPickerItemSelectedPreview() {
-//    MaterialTheme {
-//        ColorPickerItem(color = Color.Blue, isSelected = true, onClick = {})
-//    }
-//}
-//
-//@Preview(showBackground = true, name = "Color Picker Item Not Selected")
-//@Composable
-//fun ColorPickerItemNotSelectedPreview() {
-//    MaterialTheme {
-//        ColorPickerItem(color = Color.Green, isSelected = false, onClick = {})
-//    }
-//}
-
-//@Preview(showBackground = true, name = "Image Picker Item Selected")
-//@Composable
-//fun ImagePickerItemSelectedPreview() {
-//    MaterialTheme {
-//        ImagePickerItem(imageOption = predefinedBackgroundImages.first(), isSelected = true, onClick = {})
-//    }
-//}

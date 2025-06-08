@@ -1,4 +1,4 @@
-package com.example.projectmanagerapp.ui.main
+package com.example.projectmanagerapp.ui.main.screens
 
 
 import androidx.compose.foundation.background
@@ -16,19 +16,18 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.projectmanagerapp.ui.main.Board
+import com.example.projectmanagerapp.ui.main.viewmodels.BoardViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,7 +39,8 @@ fun BoardsScreen(
     onSearchClick: () -> Unit,
     onRenameBoardRequest: (String) -> Unit,
     onChangeBackgroundRequest: (Board) -> Unit,
-    onDeleteBoardRequest: (Board) -> Unit
+    onDeleteBoardRequest: (Board) -> Unit,
+    onEditBoard: (String) -> Unit
     // Thêm các callback khác nếu cần, ví dụ: onBoardOptionsClick: (Board) -> Unit
 ) {
 
@@ -143,10 +143,12 @@ fun BoardsScreen(
                 items(boards) { board ->
                     BoardItem(
                         board = board,
-                        onEditBoardNameClick = {
-                            editBoardName = board.name
-                            editingBoard = board
-                            openEditBoardNameDialog = true
+                        onEditBoardClick = {
+//                            editBoardName = board.name
+//                            editingBoard = board
+//                            openEditBoardNameDialog = true
+                            onEditBoard(board.id)
+
                         },
                         onClick = { onBoardClick(board) },
                         onRenameBoardRequest = { newName ->
@@ -169,7 +171,7 @@ fun BoardsScreen(
 @Composable
 fun BoardItem(
     board: Board,
-    onEditBoardNameClick: () -> Unit,
+    onEditBoardClick: () -> Unit,
     onClick: () -> Unit,
     onRenameBoardRequest: (String) -> Unit,
     onChangeBackgroundRequest: (Board) -> Unit,
@@ -226,7 +228,7 @@ fun BoardItem(
                     text = board.name,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Color.White // Đảm bảo chữ dễ đọc trên nền
+                        color = Color.White
                     ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -248,19 +250,11 @@ fun BoardItem(
                     onDismissRequest = { showItemMenu = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Đổi tên bảng") },
+                        text = { Text("Chỉnh sửa") },
                         onClick = {
                             // Xử lý đổi tên
                             showItemMenu = false
-                            onEditBoardNameClick()
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Thay đổi hình nền") },
-                        onClick = {
-                            // Xử lý thay đổi hình nền
-                            showItemMenu = false
-                            onChangeBackgroundRequest(board)
+                            onEditBoardClick()
                         }
                     )
                     HorizontalDivider()
@@ -288,12 +282,6 @@ fun EmptyBoardsView(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            // Icon(
-            //     painter = painterResource(id = R.drawable.ic_empty_board), // Thay bằng icon của bạn
-            //     contentDescription = "Không có bảng nào",
-            //     modifier = Modifier.size(120.dp),
-            //     tint = MaterialTheme.colorScheme.onSurfaceVariant
-            // )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = "Chưa có bảng nào",
@@ -310,57 +298,3 @@ fun EmptyBoardsView(modifier: Modifier = Modifier) {
         }
     }
 }
-
-
-// --- Preview ---
-//@Preview(showBackground = true, name = "Boards Screen - With Data")
-//@Composable
-//fun BoardsScreenPreview() {
-//    val sampleBoards = listOf(
-//        Board("1", "Dự án cá nhân", backgroundImage = "https://picsum.photos/seed/projectA/600/400", backgroundColor = "#FF4CAF50"),
-//        Board("2", "Kế hoạch du lịch hè 2025", backgroundColor = "#FF2196F3"),
-//        Board("3", "Học Jetpack Compose", backgroundImage = "https://picsum.photos/seed/compose/600/400", backgroundColor = "#FFFFC107"),
-//        Board("4", "Công việc công ty", backgroundColor = "#FF9C27B0")
-//    )
-//    MaterialTheme { // Cần có MaterialTheme để preview hoạt động đúng
-//        BoardsScreen(
-//            boards = sampleBoards,
-//            onBoardClick = {},
-//            onAddBoardClick = {},
-//            onSearchClick = {},
-//            onRenameBoardRequest ={},
-//            onChangeBackgroundRequest ={},
-//            onDeleteBoardRequest ={},
-//        )
-//    }
-//}
-//
-//@Preview(showBackground = true, name = "Boards Screen - Empty")
-//@Composable
-//fun EmptyBoardsScreenPreview() {
-//    MaterialTheme {
-//        BoardsScreen(
-//            boards = emptyList(),
-//            onBoardClick = {},
-//            onAddBoardClick = {},
-//            onSearchClick = {},
-//            onRenameBoardRequest ={},
-//            onChangeBackgroundRequest ={},
-//            onDeleteBoardRequest ={},
-//        )
-//    }
-//}
-//
-//@Preview(showBackground = true, name = "Board Item Preview")
-//@Composable
-//fun BoardItemPreview() {
-//    MaterialTheme {
-//        BoardItem(
-//            board = Board("1", "Dự án phát triển App Siêu Tốc Độ Cao", backgroundImage = "https://picsum.photos/seed/preview/600/400"),
-//            onClick = {},
-//            onRenameBoardRequest ={},
-//            onChangeBackgroundRequest ={},
-//            onDeleteBoardRequest ={},
-//        )
-//    }
-//}

@@ -63,5 +63,14 @@ class RepositoryImplement: Repository {
         firestore.collection(Constants.BOARD_COLLECTION).add(board).await()
     }
 
+    override suspend fun getBoard(boardId: String): Board? {
+        return firestore.collection(Constants.BOARD_COLLECTION).document(boardId).get().await().toObject(Board::class.java)
+
+    }
+
+    override suspend fun updateBoard(boardId: String, data: HashMap<String, Any?>) {
+        firestore.collection(Constants.BOARD_COLLECTION).document(boardId).update(data).await()
+    }
+
 
 }

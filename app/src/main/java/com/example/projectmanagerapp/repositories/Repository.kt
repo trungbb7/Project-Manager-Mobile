@@ -18,6 +18,9 @@ interface Repository {
 
     suspend fun createBoard(board: Board)
 
+    suspend fun getBoard(boardId: String): Board?
+    suspend fun updateBoard(boardId: String, data: HashMap<String, Any?>)
+
 //    fun getCard(boardId: String, listId: String, cardId: String): Flow<Card>
 //    fun getCheckList(boardId: String, listId: String, cardId: String): Flow<List<Checklist>>
 //    fun getComments(boardId: String, listId: String, cardId: String): Flow<List<Comment>>

@@ -1,4 +1,4 @@
-package com.example.projectmanagerapp.ui.main
+package com.example.projectmanagerapp.ui.main.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -17,6 +17,15 @@ class CreateBoardViewModelFactory(
 ): ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return CreateBoardViewModel(repository) as T
+    }
+}
+
+class EditBoardViewModelFactory(
+    private val repository: Repository,
+    private val boardId: String
+): ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return EditBoardViewModel(repository, boardId) as T
     }
 }
 
