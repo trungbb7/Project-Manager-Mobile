@@ -29,3 +29,12 @@ class EditBoardViewModelFactory(
     }
 }
 
+class BoardDetailViewModelFactory(
+    private val repository: Repository,
+    private val boardId: String
+): ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return BoardDetailViewModel(repository, boardId) as T
+    }
+}
+

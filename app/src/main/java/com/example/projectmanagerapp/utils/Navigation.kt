@@ -17,7 +17,12 @@ import com.example.projectmanagerapp.ui.main.screens.BoardsScreen
 import com.example.projectmanagerapp.ui.main.screens.CreateBoardScreen
 import com.example.projectmanagerapp.ui.main.HomeScreen
 import com.example.projectmanagerapp.repositories.RepositoryImplement
+import com.example.projectmanagerapp.ui.main.Card
+import com.example.projectmanagerapp.ui.main.PMList
+import com.example.projectmanagerapp.ui.main.screens.BoardDetailScreen
 import com.example.projectmanagerapp.ui.main.screens.EditBoardScreen
+import com.example.projectmanagerapp.viewmodels.BoardDetailViewModel
+import com.example.projectmanagerapp.viewmodels.BoardDetailViewModelFactory
 import com.example.projectmanagerapp.viewmodels.CreateBoardViewModel
 import com.example.projectmanagerapp.viewmodels.CreateBoardViewModelFactory
 import com.example.projectmanagerapp.viewmodels.EditBoardViewModel
@@ -26,7 +31,11 @@ import com.example.projectmanagerapp.viewmodels.EditBoardViewModelFactory
 
 @Composable
 fun AppNavHost(navController: NavHostController, modifier: Modifier) {
-    NavHost(navController = navController, startDestination = AppDestinations.BOARD_ROUTE, modifier = modifier) {
+    NavHost(
+        navController = navController,
+        startDestination = AppDestinations.BOARD_ROUTE,
+        modifier = modifier
+    ) {
         composable(AppDestinations.HOME_ROUTE) {
             HomeScreen()
         }
@@ -42,42 +51,71 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             BoardsScreen(
                 viewModel = viewModel,
                 onBoardClick = {
-                    navController.navigate(AppDestinations.BOARD_DETAIL_ROUTE)
+                    navController.navigate(AppDestinations.BOARD_DETAIL_ROUTE.replace("{boardId}", it.id))
                 },
                 onAddBoardClick = {
                     navController.navigate(AppDestinations.CREATE_BOARD_ROUTE)
                 },
-                onSearchClick = {},
-                onRenameBoardRequest = {},
-                onChangeBackgroundRequest = {},
-                onDeleteBoardRequest = {},
-                onEditBoard = {boardId ->
-                    navController.navigate(AppDestinations.EDIT_BOARD_ROUTE.replace("{boardId}", boardId))
+                onEditBoard = { boardId ->
+                    navController.navigate(
+                        AppDestinations.EDIT_BOARD_ROUTE.replace(
+                            "{boardId}",
+                            boardId
+                        )
+                    )
                 }
 
             )
         }
         composable(AppDestinations.CREATE_BOARD_ROUTE) {
             val repository = RepositoryImplement()
-            val viewModel: CreateBoardViewModel = viewModel(factory = CreateBoardViewModelFactory(repository))
-            CreateBoardScreen(onNavigateBack = {
-                navController.popBackStack()
-            },
+            val viewModel: CreateBoardViewModel =
+                viewModel(factory = CreateBoardViewModelFactory(repository))
+            CreateBoardScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
                 onBoardCreatedSuccessfully = {
                     navController.popBackStack()
                 },
-                viewModel = viewModel)
+                viewModel = viewModel
+            )
         }
-        composable(route = AppDestinations.EDIT_BOARD_ROUTE,
-            arguments = listOf(navArgument("boardId") {type = NavType.StringType})) { backStackEntry ->
+        composable(
+            route = AppDestinations.EDIT_BOARD_ROUTE,
+            arguments = listOf(navArgument("boardId") { type = NavType.StringType })
+        ) { backStackEntry ->
             val boardId = backStackEntry.arguments?.getString("boardId")
             val repository = RepositoryImplement()
-            val viewModel: EditBoardViewModel = viewModel(factory = EditBoardViewModelFactory(repository, boardId!!))
-            Log.d("Edit board route", "boardId: $boardId")
-            EditBoardScreen(viewModel = viewModel,
-                onNavigateBack = {navController.popBackStack()},
-                onBoardUpdatedSuccessfully = {navController.popBackStack()})
+            val viewModel: EditBoardViewModel =
+                viewModel(factory = EditBoardViewModelFactory(repository, boardId!!))
+            EditBoardScreen(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onBoardUpdatedSuccessfully = { navController.popBackStack() })
         }
 
+        composable(
+            route = AppDestinations.BOARD_DETAIL_ROUTE,
+            arguments = listOf(navArgument("boardId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val boardId = backStackEntry.arguments?.getString("boardId")
+            val repository = RepositoryImplement()
+            val viewModel: BoardDetailViewModel =
+                viewModel(factory = BoardDetailViewModelFactory(repository, boardId!!))
+            BoardDetailScreen(
+                viewModel,
+                onNavigateBack = { navController.popBackStack() },
+                onCardClick = { card: Card, pmList: PMList ->},
+                onAddListToBoard = {s: String ->},
+                onRenameList = {s, s1 ->},
+                onDeleteList = {s ->},
+                onAddCardToList = {s, s1 ->},
+                onUpdateCard = {card: Card ->},
+                onDeleteCard = {s, s1 ->},
+                onConfirmMoveCard = {s, s1, s2 ->},
+            )
+
+        }
     }
 }

@@ -26,7 +26,6 @@ data class EditBoardViewModelState(
 
 class EditBoardViewModel(private val repository: Repository, private val boardId: String) :
     ViewModel() {
-
     private val _uiState = MutableStateFlow(EditBoardViewModelState())
     val uiState: StateFlow<EditBoardViewModelState> = _uiState.asStateFlow()
 
@@ -36,19 +35,14 @@ class EditBoardViewModel(private val repository: Repository, private val boardId
 
 
             viewModelScope.launch {
-                val board = repository.getBoard(boardId)
-                if (board != null) {
+                repository.getBoard(boardId).collect { board ->
                     _uiState.value = _uiState.value.copy(
                         boardName = board.name,
                         prevBoardName = board.name,
                         selectedBackgroundColor = board.backgroundColor,
                         prevBackgroundImage = board.backgroundImage,
-                        backGroundType = if(board.backgroundImage != null) BackgroundType.IMAGE else BackgroundType.COLOR,
+                        backGroundType = if (board.backgroundImage != null) BackgroundType.IMAGE else BackgroundType.COLOR,
                         isLoading = false,
-                    )
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        error = "Không thể tải thông tin bảng", isLoading = false
                     )
                 }
             }
@@ -95,22 +89,25 @@ class EditBoardViewModel(private val repository: Repository, private val boardId
                         "backgroundImage" to null
                     )
                 } else {
-                    if(imageUrl != null) {
+                    if (imageUrl != null) {
                         data = hashMapOf<String, Any?>(
                             "name" to _uiState.value.boardName,
                             "backgroundColor" to _uiState.value.selectedBackgroundColor,
                             "backgroundImage" to imageUrl
                         )
-                    }
-                    else if(_uiState.value.selectedImageUri != null) {
-                        _uiState.value = _uiState.value.copy(error = "Không thể tải ảnh nền bảng", isLoading = false)
+                    } else if (_uiState.value.selectedImageUri != null) {
+                        _uiState.value = _uiState.value.copy(
+                            error = "Không thể tải ảnh nền bảng",
+                            isLoading = false
+                        )
                         return@launch
-                    }
-                    else if(_uiState.value.selectedImageUri == null && _uiState.value.prevBackgroundImage == null){
-                        _uiState.value = _uiState.value.copy(error = "Vui lòng chọn ảnh nền bảng", isLoading = false)
+                    } else if (_uiState.value.selectedImageUri == null && _uiState.value.prevBackgroundImage == null) {
+                        _uiState.value = _uiState.value.copy(
+                            error = "Vui lòng chọn ảnh nền bảng",
+                            isLoading = false
+                        )
                         return@launch
-                    }
-                    else if(_uiState.value.selectedImageUri == null && _uiState.value.prevBackgroundImage != null){
+                    } else if (_uiState.value.selectedImageUri == null && _uiState.value.prevBackgroundImage != null) {
                         data = hashMapOf<String, Any?>(
                             "name" to _uiState.value.boardName,
                             "backgroundColor" to _uiState.value.selectedBackgroundColor,
@@ -127,8 +124,5 @@ class EditBoardViewModel(private val repository: Repository, private val boardId
         } catch (e: Exception) {
             _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
         }
-
     }
-
-
 }

@@ -37,10 +37,6 @@ fun BoardsScreen(
     viewModel: BoardViewModel,
     onBoardClick: (Board) -> Unit,
     onAddBoardClick: () -> Unit,
-    onSearchClick: () -> Unit,
-    onRenameBoardRequest: (String) -> Unit,
-    onChangeBackgroundRequest: (Board) -> Unit,
-    onDeleteBoardRequest: (Board) -> Unit,
     onEditBoard: (String) -> Unit
 ) {
 
@@ -101,7 +97,7 @@ fun BoardsScreen(
             TopAppBar(
                 title = { Text("Bảng của tôi") },
                 actions = {
-                    IconButton(onClick = onSearchClick) {
+                    IconButton(onClick = {}) {
                         Icon(Icons.Filled.Search, contentDescription = "Tìm kiếm bảng")
                     }
                 },
@@ -140,13 +136,6 @@ fun BoardsScreen(
                             onEditBoard(board.id)
                         },
                         onClick = { onBoardClick(board) },
-                        onRenameBoardRequest = { newName ->
-                            if (newName != board.name) {
-                                viewModel.editBoardName(board, newName)
-                            }
-                        },
-                        onChangeBackgroundRequest = onChangeBackgroundRequest,
-                        onDeleteBoardRequest = onDeleteBoardRequest,
                         onDeleteBoardClick = { boardId ->
                             deleteBoardId = boardId
                             openDeleteBoardDialog = true
@@ -165,10 +154,7 @@ fun BoardItem(
     board: Board,
     onEditBoardClick: () -> Unit,
     onClick: () -> Unit,
-    onRenameBoardRequest: (String) -> Unit,
-    onChangeBackgroundRequest: (Board) -> Unit,
     onDeleteBoardClick: (String) -> Unit,
-    onDeleteBoardRequest: (Board) -> Unit
 ) {
 
     var showItemMenu by remember { mutableStateOf(false) }

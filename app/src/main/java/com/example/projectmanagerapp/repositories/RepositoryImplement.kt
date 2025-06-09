@@ -4,6 +4,8 @@ import android.net.Uri
 import android.util.Log
 import androidx.compose.ui.unit.Constraints
 import com.example.projectmanagerapp.ui.main.Board
+import com.example.projectmanagerapp.ui.main.Card
+import com.example.projectmanagerapp.ui.main.PMList
 import com.example.projectmanagerapp.ui.main.User
 import com.example.projectmanagerapp.utils.Constants
 import com.google.firebase.auth.FirebaseAuth
@@ -67,8 +69,21 @@ class RepositoryImplement: Repository {
         firestore.collection(Constants.BOARD_COLLECTION).add(board).await()
     }
 
-    override suspend fun getBoard(boardId: String): Board? {
-        return firestore.collection(Constants.BOARD_COLLECTION).document(boardId).get().await().toObject(Board::class.java)
+    override suspend fun getBoard(boardId: String): Flow<Board> = callbackFlow {
+        val listener = firestore.collection(Constants.BOARD_COLLECTION).document(boardId).addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
+            if (snapshot != null) {
+                val board = snapshot.toObject(Board::class.java)
+                trySend(board!!)
+            }
+        }
+        awaitClose {
+            listener.remove()
+        }
+
 
     }
 
@@ -78,6 +93,67 @@ class RepositoryImplement: Repository {
 
     override suspend fun deleteBoard(boardId: String) {
         firestore.collection(Constants.BOARD_COLLECTION).document(boardId).delete().await()
+    }
+
+    override suspend fun getLists(boardId: String): Flow<List<PMList>> = callbackFlow {
+        val listener = firestore.collection(Constants.LIST_COLLECTION).whereEqualTo("boardId", boardId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val lists = snapshot.documents.mapNotNull { it.toObject(PMList::class.java) }
+                    trySend(lists)
+                }
+            }
+        awaitClose { listener.remove() }
+
+    }
+
+    override suspend fun getCards(listId: String): Flow<List<Card>> = callbackFlow {
+        val listener = firestore.collection(Constants.CARD_COLLECTION).whereEqualTo("listId", listId).addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                close(error)
+                return@addSnapshotListener
+            }
+            if (snapshot != null) {
+                val cards = snapshot.documents.mapNotNull { it.toObject(Card::class.java) }
+                trySend(cards)
+            }
+        }
+        awaitClose { listener.remove() }
+    }
+
+    override suspend fun addCard(
+        card: Card
+    ) {
+        firestore.collection(Constants.CARD_COLLECTION).add(card).await()
+    }
+
+    override suspend fun updateCard(card: Card) {
+        firestore.collection(Constants.CARD_COLLECTION).document(card.id).set(card).await()
+    }
+
+    override suspend fun deleteCard(cardId: String) {
+        firestore.collection(Constants.CARD_COLLECTION).document(cardId).delete().await()
+    }
+
+    override suspend fun createList(list: PMList) {
+        firestore.collection(Constants.LIST_COLLECTION).add(list).await()
+    }
+
+    override suspend fun updateList(list: PMList) {
+        firestore.collection(Constants.LIST_COLLECTION).document(list.id).set(list).await()
+    }
+
+    override suspend fun deleteList(listId: String) {
+        firestore.collection(Constants.LIST_COLLECTION).document(listId).delete().await()
+
+    }
+
+    override suspend fun moveCard(cardId: String, targetListId: String) {
+        firestore.collection(Constants.CARD_COLLECTION).document(cardId).update("listId", targetListId).await()
     }
 
 

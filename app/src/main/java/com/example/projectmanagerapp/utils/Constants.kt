@@ -5,7 +5,7 @@ object AppDestinations {
     const val BOARD_ROUTE = "board"
     const val CREATE_BOARD_ROUTE = "create_board"
     const val EDIT_BOARD_ROUTE = "edit_board/{boardId}"
-    const val BOARD_DETAIL_ROUTE = "board_detail"
+    const val BOARD_DETAIL_ROUTE = "board_detail{boardId}"
     const val CARD_DETAIL_ROUTE = "card_detail"
     const val LOGIN_ROUTE = "login"
     const val REGISTER_ROUTE = "register"
@@ -17,8 +17,10 @@ object Constants {
     const val USER_COLLECTION = "users"
     const val BOARD_COLLECTION = "boards"
     const val CARD_COLLECTION = "cards"
+    const val LIST_COLLECTION = "pm_list"
 
     const val BOARD_BACKGROUND_REF = "board_backgrounds"
+
 
     val predefinedBackgroundColors = listOf(
         "#FF0079BF", // Blue
