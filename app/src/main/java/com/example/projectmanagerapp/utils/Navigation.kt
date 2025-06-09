@@ -2,10 +2,13 @@ package com.example.projectmanagerapp.utils
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import android.util.Log
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.projectmanagerapp.MainActivity
 import com.example.projectmanagerapp.ui.auth.AuthViewModel
 import com.example.projectmanagerapp.ui.auth.ForgotPasswordScreen
 import com.example.projectmanagerapp.ui.auth.LoginScreen
@@ -15,6 +18,7 @@ import com.example.projectmanagerapp.ui.main.HomeScreen
 @Composable
 fun AppNavHost(navController: NavHostController, modifier: Modifier) {
     val authViewModel: AuthViewModel = viewModel()
+    val context = LocalContext.current
 
     NavHost(
         navController = navController,
@@ -40,8 +44,39 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
                 },
                 onRegisterClick = { navController.navigate(AppDestinations.REGISTER_ROUTE) },
                 onForgotPasswordClick = { navController.navigate(AppDestinations.FORGOT_PASSWORD_ROUTE) },
-                onGoogleClick = { /* Implement Google login */ },
-                onFacebookClick = { /* Implement Facebook login */ },
+                onGoogleClick = {
+                    Log.d("Navigation", "Google button clicked")
+                    // Set callback and start Google sign in
+                    MainActivity.googleSignInHelper.setCallback { credential ->
+                        Log.d("Navigation", "Google callback received: ${credential != null}")
+                        credential?.let {
+                            Log.d("Navigation", "Calling authViewModel.signInWithGoogle")
+                            authViewModel.signInWithGoogle(it)
+                        }
+                    }
+                    MainActivity.googleSignInHelper.signIn(forceAccountSelection = true)
+                },
+                onFacebookClick = {
+                    Log.d("Navigation", "Facebook button clicked")
+                    // Check if Facebook is configured
+                    val facebookAppId = context.getString(com.example.projectmanagerapp.R.string.facebook_app_id)
+                    if (facebookAppId == "YOUR_FACEBOOK_APP_ID") {
+                        Log.d("Navigation", "Facebook not configured yet")
+                        authViewModel.resetState()
+                        // Show message that Facebook needs configuration
+                        return@LoginScreen
+                    }
+
+                    // Set callback and start Facebook sign in
+                    MainActivity.facebookSignInHelper.setCallback { credential ->
+                        Log.d("Navigation", "Facebook callback received: ${credential != null}")
+                        credential?.let {
+                            Log.d("Navigation", "Calling authViewModel.signInWithFacebook")
+                            authViewModel.signInWithFacebook(it)
+                        }
+                    }
+                    MainActivity.facebookSignInHelper.signIn(context as MainActivity)
+                },
                 authViewModel = authViewModel
             )
         }

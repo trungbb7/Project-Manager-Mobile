@@ -30,4 +30,13 @@
     <string name="user_info">Thông tin người dùng</string>
     <string name="welcome_user">Xin chào, %1$s!</string>
     <string name="user_email">Email: %1$s</string>
+
+    <!-- Google Configuration -->
+    <string name="default_web_client_id">192197850478-hhvmdq5jh9qhmu92kjhlg7o0jkp0pshp.apps.googleusercontent.com</string>
+
+    <!-- Facebook Configuration -->
+    <!-- TODO: Replace with your actual Facebook App ID and Client Token -->
+    <string name="facebook_app_id">955702846534786</string>
+    <string name="facebook_client_token">19c86037494f630a1869c45eeefc9ee8</string>
+    <string name="fb_login_protocol_scheme">fb955702846534786</string>
 </resources>

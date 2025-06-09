@@ -33,18 +33,23 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.projectmanagerapp.R
 import com.example.projectmanagerapp.ui.auth.AuthViewModel
+import com.example.projectmanagerapp.ui.profile.UserProfileViewModel
 import com.example.projectmanagerapp.ui.theme.ProjectManagerAppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onLogout: () -> Unit = {},
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = hiltViewModel(),
+    userProfileViewModel: UserProfileViewModel = hiltViewModel()
 ) {
     val userName by authViewModel.currentUserName.collectAsState()
     val userEmail by authViewModel.currentUserEmail.collectAsState()
+    val user by userProfileViewModel.user.collectAsState()
+    val isLoadingUser by userProfileViewModel.isLoading.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     if (showLogoutDialog) {
@@ -117,17 +122,60 @@ fun HomeScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        Text(
-                            text = stringResource(R.string.welcome_user, userName),
-                            style = MaterialTheme.typography.titleLarge
-                        )
+                        if (isLoadingUser) {
+                            Text("Đang tải thông tin...")
+                        } else {
+                            user?.let { userData ->
+                                Text(
+                                    text = "Chào mừng, ${userData.displayName.ifBlank { userName }}",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
 
-                        Text(
-                            text = stringResource(R.string.user_email, userEmail),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                                Text(
+                                    text = "Email: ${userData.email}",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+
+                                if (userData.department.isNotBlank()) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Phòng ban: ${userData.department}",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+
+                                if (userData.position.isNotBlank()) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Chức vụ: ${userData.position}",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+
+                                if (userData.linkedProviders.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Tài khoản liên kết: ${userData.linkedProviders.joinToString(", ")}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            } ?: run {
+                                Text(
+                                    text = stringResource(R.string.welcome_user, userName),
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(
+                                    text = stringResource(R.string.user_email, userEmail),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        }
                     }
                 }
             }

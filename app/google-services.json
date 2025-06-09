@@ -12,7 +12,20 @@
           "package_name": "com.example.projectmanagerapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "192197850478-k36dp7o0kokp3qtpannn59292r9469ub.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.projectmanagerapp",
+            "certificate_hash": "62d809196643ed02a87caac41a197d9eb65c6b53"
+          }
+        },
+        {
+          "client_id": "192197850478-hhvmdq5jh9qhmu92kjhlg7o0jkp0pshp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyATxtUN_96AZ5BRUTfz75z5eOmv0GHuWCs"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "192197850478-hhvmdq5jh9qhmu92kjhlg7o0jkp0pshp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
