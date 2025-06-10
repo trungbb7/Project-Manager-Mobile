@@ -7,6 +7,7 @@ import com.example.projectmanagerapp.repositories.MainFeaturesRepository
 import com.example.projectmanagerapp.ui.main.Board
 import com.example.projectmanagerapp.ui.main.Card
 import com.example.projectmanagerapp.ui.main.PMList
+import com.example.projectmanagerapp.ui.main.User
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +24,7 @@ data class BoardDetailUIState(
     val lists: List<PMList> = emptyList(),
     val cardsByList: Map<String, List<Card>> = emptyMap(),
     val cardSelectedForMoveInfo: Pair<String, String>? = null,
+    val members: List<User> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -34,7 +36,10 @@ class BoardDetailViewModel(val mainFeaturesRepository: MainFeaturesRepository, v
     val uiState: StateFlow<BoardDetailUIState> = _uiState.asStateFlow()
 
     init {
-        Log.d("BoardDetailViewModel", "BoardId: $boardId")
+        fetchData()
+    }
+
+    fun fetchData() {
         viewModelScope.launch {
             var pmLists = emptyList<PMList>()
 
@@ -58,6 +63,8 @@ class BoardDetailViewModel(val mainFeaturesRepository: MainFeaturesRepository, v
             }
 
             combine(boardFlow, cardsByListFlow) { board, cardsByList ->
+                fetchMembers(board.memberIds)
+
                 _uiState.value.copy(
                     board = board,
                     lists = pmLists,
@@ -69,6 +76,17 @@ class BoardDetailViewModel(val mainFeaturesRepository: MainFeaturesRepository, v
                 _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
             }.collect { newState ->
                 _uiState.value = newState
+            }
+        }
+    }
+
+    fun fetchMembers(memberIds: List<String>) {
+        viewModelScope.launch {
+            try {
+                val members = mainFeaturesRepository.getMemberProfiles(memberIds)
+                _uiState.value = _uiState.value.copy(members = members)
+                } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message)
             }
         }
     }

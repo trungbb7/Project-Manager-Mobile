@@ -1,13 +1,15 @@
 package com.example.projectmanagerapp.ui.main.screens
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -22,13 +24,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.toColorInt
+import coil.compose.AsyncImage
+import com.example.projectmanagerapp.R
 import com.example.projectmanagerapp.ui.main.Card
 import com.example.projectmanagerapp.ui.main.PMList
+import com.example.projectmanagerapp.ui.main.User
 import com.example.projectmanagerapp.viewmodels.BoardDetailViewModel
 
 
@@ -38,6 +46,7 @@ import com.example.projectmanagerapp.viewmodels.BoardDetailViewModel
 fun BoardDetailScreen(
     viewModel: BoardDetailViewModel,
     onNavigateBack: () -> Unit,
+    onInviteClick: () -> Unit,
     onCardItemClicked: (listId: String, cardId: String) -> Unit
 ) {
     
@@ -79,72 +88,84 @@ fun BoardDetailScreen(
         },
         containerColor = Color(board.backgroundColor.toColorInt())
     ) { paddingValues ->
-        LazyRow(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-                .padding(start = 8.dp, top = 8.dp, bottom = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            itemsIndexed(lists, key = { _, list -> list.id }) { _, pmList ->
-                ListItemColumn(
-                    pmList = pmList,
-                    cards = cardsByList[pmList.id] ?: emptyList(),
-                    cardSelectedForMoveInfo = cardSelectedForMoveInfo,
-                    onCardClick = { card ->
-                        // Nếu đang trong chế độ di chuyển và click vào thẻ khác thẻ đang chọn, không làm gì cả
-                        // Hoặc có thể cho phép click để mở chi tiết nếu muốn
-                        if (cardSelectedForMoveInfo == null || cardSelectedForMoveInfo?.first == card.id) {
-                        }
-                    },
-                    // List Menu Actions
-                    onRenameList = {
-                        newName -> viewModel.updateList(pmList.copy(name = newName)) },
-                    onDeleteList = { viewModel.deleteList(pmList.id) },
-                    onAddCardFromMenu = { cardTitle ->
-                        viewModel.addCard(Card(title = cardTitle, listId = pmList.id))
-                    },
-                    // Card Actions
-                    onUpdateCard = {
-                        viewModel.updateCard(it)
-                    },
-                    onDeleteCard = { cardId -> viewModel.deleteCard(cardId) },
-                    // Move Card Actions
-                    onToggleSelectCardForMove = { cardId, sourceListId ->
-                        cardSelectedForMoveInfo = if (cardSelectedForMoveInfo?.first == cardId) {
-                            null // Bỏ chọn nếu click lại thẻ đang chọn
-                        } else {
-                            Pair(cardId, sourceListId) // Chọn thẻ mới
-                        }
-                    },
-                    onConfirmMoveCardToList = { targetListId ->
-                        cardSelectedForMoveInfo?.let { (cardId, sourceListId) ->
-                            viewModel.moveCard(cardId, targetListId)
-                            cardSelectedForMoveInfo = null
-                        }
-                    },
-                    onCardItemClicked = { listId, cardId ->
-                        onCardItemClicked(listId, cardId)
-                    }
 
-                )
-            }
-            item {
-                AddListColumn(
-                    showInput = showAddListInput,
-                    onShowInputToggle = { showAddListInput = !showAddListInput },
-                    listTitle = newListTitle,
-                    onListTitleChange = { newListTitle = it },
-                    onAddList = {
-                        if (newListTitle.isNotBlank()) {
-                            viewModel.createList(PMList(name = newListTitle, boardId = board.id))
-                            newListTitle = ""
-                            showAddListInput = false
+        Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+
+            BoardMembersBar(
+                members = uiState.members,
+                onInviteClick = {
+//                navController.navigate("addMember/$boardId")
+                    onInviteClick()
+                }
+            )
+
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 8.dp, top = 8.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                itemsIndexed(lists, key = { _, list -> list.id }) { _, pmList ->
+                    ListItemColumn(
+                        pmList = pmList,
+                        cards = cardsByList[pmList.id] ?: emptyList(),
+                        cardSelectedForMoveInfo = cardSelectedForMoveInfo,
+                        onCardClick = { card ->
+                            // Nếu đang trong chế độ di chuyển và click vào thẻ khác thẻ đang chọn, không làm gì cả
+                            // Hoặc có thể cho phép click để mở chi tiết nếu muốn
+                            if (cardSelectedForMoveInfo == null || cardSelectedForMoveInfo?.first == card.id) {
+                            }
+                        },
+                        // List Menu Actions
+                        onRenameList = {
+                                newName -> viewModel.updateList(pmList.copy(name = newName)) },
+                        onDeleteList = { viewModel.deleteList(pmList.id) },
+                        onAddCardFromMenu = { cardTitle ->
+                            viewModel.addCard(Card(title = cardTitle, listId = pmList.id))
+                        },
+                        // Card Actions
+                        onUpdateCard = {
+                            viewModel.updateCard(it)
+                        },
+                        onDeleteCard = { cardId -> viewModel.deleteCard(cardId) },
+                        // Move Card Actions
+                        onToggleSelectCardForMove = { cardId, sourceListId ->
+                            cardSelectedForMoveInfo = if (cardSelectedForMoveInfo?.first == cardId) {
+                                null // Bỏ chọn nếu click lại thẻ đang chọn
+                            } else {
+                                Pair(cardId, sourceListId) // Chọn thẻ mới
+                            }
+                        },
+                        onConfirmMoveCardToList = { targetListId ->
+                            cardSelectedForMoveInfo?.let { (cardId, sourceListId) ->
+                                viewModel.moveCard(cardId, targetListId)
+                                cardSelectedForMoveInfo = null
+                            }
+                        },
+                        onCardItemClicked = { listId, cardId ->
+                            onCardItemClicked(listId, cardId)
                         }
-                    }
-                )
+
+                    )
+                }
+                item {
+                    AddListColumn(
+                        showInput = showAddListInput,
+                        onShowInputToggle = { showAddListInput = !showAddListInput },
+                        listTitle = newListTitle,
+                        onListTitleChange = { newListTitle = it },
+                        onAddList = {
+                            if (newListTitle.isNotBlank()) {
+                                viewModel.createList(PMList(name = newListTitle, boardId = board.id))
+                                newListTitle = ""
+                                showAddListInput = false
+                            }
+                        }
+                    )
+                }
             }
         }
+
     }
 }
 
@@ -181,6 +202,9 @@ fun ListItemColumn(
         shape = RoundedCornerShape(8.dp)
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
+
+
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -536,6 +560,48 @@ fun AddListColumn(
             Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(4.dp))
             Text("Thêm danh sách khác")
+        }
+    }
+}
+
+@Composable
+fun BoardMembersBar(
+    members: List<User>,
+    onInviteClick: () -> Unit
+) {
+    Box(modifier = Modifier.fillMaxWidth()
+        .padding(horizontal = 16.dp, vertical = 8.dp)
+        .background(color = Color("#FFFFFF".toColorInt()).copy(alpha = 0.1f))
+        .clip(MaterialTheme.shapes.medium)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            // Nút mời thành viên
+            OutlinedButton(onClick = onInviteClick) {
+                Icon(painterResource(R.drawable.baseline_person_add_alt_1_24), contentDescription = "Mời thành viên")
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Mời")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Vòng lặp vẽ avatar
+            Row(modifier = Modifier.weight(1f)) {
+                members.take(5).forEach { member ->
+                    AsyncImage(
+                        model = member.photoUrl,
+                        placeholder = painterResource(R.drawable.user_image_placeholder),
+                        contentDescription = member.displayName,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .padding(start = 4.dp)
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .border(BorderStroke(2.dp, MaterialTheme.colorScheme.surface), CircleShape)
+                    )
+                }
+            }
         }
     }
 }

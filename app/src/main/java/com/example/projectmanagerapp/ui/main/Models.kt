@@ -7,10 +7,10 @@ import java.util.UUID
 
 
 data class User(
-    val id: String = "",
-    val name: String = "",
+    val uid: String = "",
+    val displayName: String = "",
     val email: String = "",
-    val imageUrl: String? = null
+    val photoUrl: String? = null
 )
 
 data class Card(
@@ -19,6 +19,7 @@ data class Card(
     val title: String = "",
     val description: String? = null,
     val dueDate: Long? = null,
+    val assignedMemberIds: List<String> = emptyList(),
     val createdAt: Long = System.currentTimeMillis()
 )
 
@@ -26,7 +27,7 @@ data class PMList(
     @DocumentId val id: String = "",
     val boardId: String = "",
     val name: String = "",
-    val createdDate: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis()
 )
 
 data class Board(

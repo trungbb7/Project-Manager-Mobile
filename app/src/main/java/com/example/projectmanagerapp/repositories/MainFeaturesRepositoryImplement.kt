@@ -2,7 +2,6 @@ package com.example.projectmanagerapp.repositories
 
 import android.net.Uri
 import android.util.Log
-import androidx.compose.animation.core.snap
 import com.example.projectmanagerapp.ui.main.Board
 import com.example.projectmanagerapp.ui.main.Card
 import com.example.projectmanagerapp.ui.main.Checklist
@@ -11,6 +10,7 @@ import com.example.projectmanagerapp.ui.main.PMList
 import com.example.projectmanagerapp.ui.main.User
 import com.example.projectmanagerapp.utils.Constants
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
@@ -25,15 +25,16 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
     private val auth = FirebaseAuth.getInstance()
     override fun getCurrentUser(): User {
         return User(
-            id = "oJ9T4dMvoTatcBbGvqP16AX0JpI2",
-            name = "Minh Trung",
-            email = "trungbb8@gmail.com"
+            uid = "oJ9T4dMvoTatcBbGvqP16AX0JpI2",
+            displayName = "Minh Trung",
+            email = "trungbb8@gmail.com",
+            photoUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqFor1KeBHB96sGD-uywiJFDD_fhnT79FH8w&s"
         )
     }
 
     override fun getBoards(): Flow<List<Board>> = callbackFlow {
         val user = getCurrentUser()
-        val userId = user.id
+        val userId = user.uid
         val listener = firestore.collection("boards").whereArrayContains("memberIds", userId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -86,6 +87,11 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
         }
     }
 
+    override suspend fun getBoardOnce(boardId: String): Board? {
+        val snapshot = firestore.collection(Constants.BOARD_COLLECTION).document(boardId).get().await()
+        return snapshot.toObject(Board::class.java)
+    }
+
     override suspend fun updateBoard(boardId: String, data: HashMap<String, Any?>) {
         firestore.collection(Constants.BOARD_COLLECTION).document(boardId).update(data).await()
     }
@@ -95,7 +101,7 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
     }
 
     override suspend fun getLists(boardId: String): Flow<List<PMList>> = callbackFlow {
-        val listener = firestore.collection(Constants.LIST_COLLECTION).whereEqualTo("boardId", boardId)
+        val listener = firestore.collection(Constants.LIST_COLLECTION).whereEqualTo("boardId", boardId).orderBy("createdAt")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
@@ -253,5 +259,43 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
 
     override suspend fun deleteComment(commentId: String) {
         firestore.collection(Constants.COMMENT_COLLECTION).document(commentId).delete().await()
+    }
+
+    override suspend fun searchUsersByEmail(email: String): List<User> {
+        val snapshot = firestore.collection(Constants.USER_COLLECTION)
+            .whereEqualTo("email", email)
+            .limit(10).get().await()
+        return snapshot.toObjects(User::class.java)
+    }
+
+    override suspend fun getMemberProfiles(memberIds: List<String>): List<User> {
+        if (memberIds.isEmpty()) return emptyList()
+        val snapshot = firestore.collection(Constants.USER_COLLECTION).whereIn("uid", memberIds).get().await()
+        return snapshot.toObjects(User::class.java)
+    }
+
+    override suspend fun addMemberToBoard(boardId: String, userId: String) {
+        firestore.collection(Constants.BOARD_COLLECTION).document(boardId).
+        update("memberIds", FieldValue.arrayUnion(userId)).await()
+    }
+
+    override suspend fun assignMemberToCard(
+        boardId: String,
+        listId: String,
+        cardId: String,
+        userId: String
+    ) {
+        firestore.collection(Constants.CARD_COLLECTION).document(cardId)
+            .update("assignedMemberIds", FieldValue.arrayUnion(userId)).await()
+    }
+
+    override suspend fun unassignMemberFromCard(
+        boardId: String,
+        listId: String,
+        cardId: String,
+        userId: String
+    ) {
+        firestore.collection(Constants.CARD_COLLECTION).document(cardId)
+            .update("assignedMemberIds", FieldValue.arrayRemove(userId)).await()
     }
 }

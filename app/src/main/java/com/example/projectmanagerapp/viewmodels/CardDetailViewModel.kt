@@ -8,6 +8,7 @@ import com.example.projectmanagerapp.ui.main.Card
 import com.example.projectmanagerapp.ui.main.Checklist
 import com.example.projectmanagerapp.ui.main.ChecklistItem
 import com.example.projectmanagerapp.ui.main.Comment
+import com.example.projectmanagerapp.ui.main.User
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +28,8 @@ data class CardDetailUIState(
     val card: Card? = null,
     val comments: List<Comment> = emptyList(),
     val checklists: List<Checklist> = emptyList(),
+    val boardMembers: List<User> = emptyList(),
+    val assignedMembers: List<User> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -48,7 +51,6 @@ class CardDetailViewModel(
     }
 
     fun fetchData() {
-        Log.d("CardDetailViewModel", "boardId: $boardId, listId: $listId, cardId: $cardId")
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
@@ -58,14 +60,23 @@ class CardDetailViewModel(
                 val commentsFlow = repository.getComments(cardId)
                 val checklistsFlow = repository.getCheckLists(cardId)
 
+                val board = repository.getBoardOnce(boardId)
+                val boardMembers = repository.getMemberProfiles(board?.memberIds ?: emptyList())
+
+
                 combine(boardNameFlow, listNameFlow, cardFlow, commentsFlow, checklistsFlow) { boardName, listName, card, comments, checklists ->
-                    Log.d("CardDetailViewModel", "boardName: $boardName, listName: $listName, card: $card, comments: $comments, checklists: $checklists")
+                    val assignedMember: List<User> = boardMembers.filter { member ->
+                        card.assignedMemberIds.contains(member.uid)
+                    }
+
                     _uiState.value.copy(
                         boardName = boardName,
                         listName = listName,
                         card = card,
                         comments = comments,
                         checklists = checklists,
+                        boardMembers = boardMembers,
+                        assignedMembers = assignedMember,
                         isLoading = false
                     )
                 }.catch { e ->
@@ -77,6 +88,30 @@ class CardDetailViewModel(
 
             } catch (e: Exception) {
                 Log.e("CardDetailViewModel", "Error fetching data", e)
+                _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
+            }
+        }
+    }
+
+    fun assignMember(userId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                repository.assignMemberToCard(boardId, listId, cardId, userId)
+                _uiState.value = _uiState.value.copy(isLoading = false)
+            }catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
+            }
+        }
+    }
+
+    fun unAssignMember(userId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                repository.unassignMemberFromCard(boardId, listId, cardId, userId)
+                _uiState.value = _uiState.value.copy(isLoading = false)
+            }catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
             }
         }
@@ -232,7 +267,7 @@ class CardDetailViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
                 val user = repository.getCurrentUser()
-                val comment = Comment(text = commentText, cardId = cardId, authorId = user.id, authorName = user.name)
+                val comment = Comment(text = commentText, cardId = cardId, authorId = user.uid, authorName = user.displayName)
                 repository.addComment(comment)
                 _uiState.value = _uiState.value.copy(isLoading = false)
             }catch (e: Exception) {

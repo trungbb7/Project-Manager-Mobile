@@ -1,5 +1,6 @@
 package com.example.projectmanagerapp.utils
 
+import AddMemberScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -19,6 +20,8 @@ import com.example.projectmanagerapp.repositories.MainFeaturesRepositoryImplemen
 import com.example.projectmanagerapp.ui.main.screens.BoardDetailScreen
 import com.example.projectmanagerapp.ui.main.screens.CardDetailScreen
 import com.example.projectmanagerapp.ui.main.screens.EditBoardScreen
+import com.example.projectmanagerapp.viewmodels.AddMemberViewModel
+import com.example.projectmanagerapp.viewmodels.AddMemberViewModelFactory
 import com.example.projectmanagerapp.viewmodels.BoardDetailViewModel
 import com.example.projectmanagerapp.viewmodels.BoardDetailViewModelFactory
 import com.example.projectmanagerapp.viewmodels.CardDetailViewModel
@@ -118,6 +121,11 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
                             .replace("{listId}", listId)
                             .replace("{cardId}", cardId)
                     )
+                },
+                onInviteClick = {
+                    navController.navigate(
+                        AppDestinations.ADD_MEMBER_ROUTE.replace("{boardId}", boardId)
+                    )
                 }
             )
         }
@@ -137,6 +145,23 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             val viewModel: CardDetailViewModel =
                 viewModel(factory = CardDetailViewModelFactory(repository, boardId!!, listId!!, cardId!!))
             CardDetailScreen(
+                viewModel = viewModel,
+                onNavigateBack = {
+                    navController.popBackStack()}
+            )
+        }
+
+        composable(
+            route = AppDestinations.ADD_MEMBER_ROUTE,
+            arguments = listOf(
+                navArgument("boardId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val boardId = backStackEntry.arguments?.getString("boardId")
+            val repository = MainFeaturesRepositoryImplement()
+            val viewModel: AddMemberViewModel =
+                viewModel(factory = AddMemberViewModelFactory(repository, boardId!!))
+            AddMemberScreen(
                 viewModel = viewModel,
                 onNavigateBack = {
                     navController.popBackStack()}

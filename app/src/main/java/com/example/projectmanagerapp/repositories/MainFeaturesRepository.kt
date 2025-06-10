@@ -20,6 +20,7 @@ interface MainFeaturesRepository {
     suspend fun createBoard(board: Board)
 
     suspend fun getBoard(boardId: String): Flow<Board>
+    suspend fun getBoardOnce(boardId: String): Board?
     suspend fun updateBoard(boardId: String, data: HashMap<String, Any?>)
     suspend fun deleteBoard(boardId: String)
 
@@ -53,6 +54,13 @@ interface MainFeaturesRepository {
 
     suspend fun addComment(comment: Comment)
     suspend fun deleteComment(commentId: String)
+
+
+    suspend fun searchUsersByEmail(email: String): List<User>
+    suspend fun getMemberProfiles(memberIds: List<String>): List<User>
+    suspend fun addMemberToBoard(boardId: String, userId: String)
+    suspend fun assignMemberToCard(boardId: String, listId: String, cardId: String, userId: String)
+    suspend fun unassignMemberFromCard(boardId: String, listId: String, cardId: String, userId: String)
 
 //    fun getCard(boardId: String, listId: String, cardId: String): Flow<Card>
 //    fun getCheckList(boardId: String, listId: String, cardId: String): Flow<List<Checklist>>

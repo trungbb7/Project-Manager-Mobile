@@ -38,6 +38,17 @@ class BoardDetailViewModelFactory(
     }
 }
 
+class AddMemberViewModelFactory(
+    private val mainFeaturesRepository: MainFeaturesRepository,
+    private val boardId: String
+): ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return AddMemberViewModel(mainFeaturesRepository, boardId) as T
+    }
+}
+
+
+
 class CardDetailViewModelFactory(
     private val mainFeaturesRepository: MainFeaturesRepository,
     private val boardId: String,

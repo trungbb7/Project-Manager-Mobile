@@ -2,10 +2,13 @@ package com.example.projectmanagerapp.ui.main.screens
 
 
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -23,6 +27,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,21 +37,28 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.projectmanagerapp.ui.main.Checklist
 import com.example.projectmanagerapp.ui.main.ChecklistItem
 import com.example.projectmanagerapp.ui.main.Comment
+import com.example.projectmanagerapp.ui.main.User
 import com.example.projectmanagerapp.utils.Utils
 import com.example.projectmanagerapp.viewmodels.CardDetailViewModel
 import com.example.projectmanagerapp.viewmodels.NavigationEvent
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import com.example.projectmanagerapp.R
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,6 +110,8 @@ fun CardDetailScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val titleFocusRequester = remember { FocusRequester() }
 
+    var showAssignMemberDialog by remember { mutableStateOf(false) }
+
     // --- State cho DatePickerDialog ---
     var showDatePickerDialog by remember { mutableStateOf(false) }
 
@@ -137,6 +151,22 @@ fun CardDetailScreen(
         ) {
             DatePicker(state = datePickerState)
         }
+    }
+
+    if(showAssignMemberDialog) {
+        AssignMemberDialog(
+            boardMembers = uiState.boardMembers,
+            assignedMemberIds = uiState.card!!.assignedMemberIds,
+            onAssign = {userId ->
+                viewModel.assignMember(userId)
+            },
+            onUnassign = {userId ->
+                viewModel.unAssignMember(userId)
+            },
+            onDismiss = {
+                showAssignMemberDialog = false
+            }
+        )
     }
 
 
@@ -233,6 +263,35 @@ fun CardDetailScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
+            item {
+                CardDetailSection(icon = Icons.Filled.Person, title = "Thành viên") {
+                    val assignedMembers = uiState.assignedMembers
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            assignedMembers.forEach { member ->
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(member.photoUrl)
+                                        .crossfade(true)
+                                         .placeholder(R.drawable.user_image_placeholder) // Ảnh chờ
+                                         .error(R.drawable.user_image_placeholder) // Ảnh lỗi
+                                        .build(),
+                                    contentDescription = "Ảnh đại diện",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.size(36.dp)
+                                        .clip(CircleShape)
+                                        .border(BorderStroke(2.dp, MaterialTheme.colorScheme.surface), CircleShape)
+                                )
+                            }
+
+                            IconButton(onClick = { showAssignMemberDialog = true }) {
+                                Icon(Icons.Filled.AddCircle, "Gán thành viên")
+                            }
+                        }
+                }
+            }
+
             item {
                 CardDetailSection(icon = Icons.Filled.List, title = "Trong danh sách") {
                     Text(listName, style = MaterialTheme.typography.bodyLarge)
@@ -420,7 +479,7 @@ fun CardDetailScreen(
 fun CardDetailSection(
     icon: ImageVector,
     title: String,
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable (ColumnScope.() -> Unit)
 ) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -666,3 +725,45 @@ fun CommentItemView(comment: Comment) {
         }
     }
 }
+
+
+
+
+
+@Composable
+fun AssignMemberDialog(
+    boardMembers: List<User>, // Tất cả thành viên của board
+    assignedMemberIds: List<String>, // ID các thành viên đã được gán cho card này
+    onAssign: (userId: String) -> Unit,
+    onUnassign: (userId: String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Gán thành viên") },
+        text = {
+            LazyColumn {
+                items(boardMembers) { member ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable {
+                            if (assignedMemberIds.contains(member.uid)) {
+                                onUnassign(member.uid)
+                            } else {
+                                onAssign(member.uid)
+                            }
+                        },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = assignedMemberIds.contains(member.uid),
+                            onCheckedChange = null // Xử lý trong modifier của Row
+                        )
+                        Text(member.displayName)
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Xong") } }
+    )
+}
+

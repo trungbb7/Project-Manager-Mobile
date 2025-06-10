@@ -61,7 +61,7 @@ class CreateBoardViewModel(
                     }
                 }
 
-                val currentUserId = mainFeaturesRepository.getCurrentUser().id
+                val currentUserId = mainFeaturesRepository.getCurrentUser().uid
                 val board = Board(
                     name = _uiState.value.boardName,
                     ownerId = currentUserId,
