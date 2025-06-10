@@ -10,6 +10,7 @@ object AppDestinations {
     const val ADD_MEMBER_ROUTE = "add_member/{boardId}"
     const val LOGIN_ROUTE = "login"
     const val REGISTER_ROUTE = "register"
+    const val FORGOT_PASSWORD_ROUTE = "forgot_password"
     const val PROFILE_ROUTE = "profile"
     const val DEMO = "demo"
 }
