@@ -2,6 +2,7 @@ package com.example.projectmanagerapp.repositories
 
 import android.net.Uri
 import android.util.Log
+import androidx.compose.ui.unit.Constraints
 import com.example.projectmanagerapp.ui.main.Board
 import com.example.projectmanagerapp.ui.main.Card
 import com.example.projectmanagerapp.ui.main.Checklist
@@ -23,19 +24,36 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
     private val firestore = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance()
     private val auth = FirebaseAuth.getInstance()
-    override fun getCurrentUser(): User {
-        return User(
-            uid = "oJ9T4dMvoTatcBbGvqP16AX0JpI2",
-            displayName = "Minh Trung",
-            email = "trungbb8@gmail.com",
-            photoUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqFor1KeBHB96sGD-uywiJFDD_fhnT79FH8w&s"
-        )
+    override suspend fun getCurrentUser(): User? {
+        val uid = auth.currentUser?.uid
+        if (uid == null) return null
+        val snapshot = firestore.collection(Constants.USER_COLLECTION).document(uid).get().await()
+        if (snapshot.exists()) {
+            return snapshot.toObject(User::class.java)!!
+        }else{
+            return null
+        }
+
+//        return User(
+//            uid = "oJ9T4dMvoTatcBbGvqP16AX0JpI2",
+//            displayName = "Minh Trung",
+//            email = "trungbb8@gmail.com",
+//            photoUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqFor1KeBHB96sGD-uywiJFDD_fhnT79FH8w&s"
+//        )
+    }
+
+    override fun getCurrentUserId(): String? {
+        return auth.currentUser?.uid
+    }
+
+    override fun signOut() {
+        auth.signOut()
     }
 
     override fun getBoards(): Flow<List<Board>> = callbackFlow {
         val user = getCurrentUser()
-        val userId = user.uid
-        val listener = firestore.collection("boards").whereArrayContains("memberIds", userId)
+        val userId = user?.uid
+        val listener = firestore.collection("boards").whereArrayContains("memberIds", userId!!)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)

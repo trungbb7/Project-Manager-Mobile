@@ -267,6 +267,10 @@ class CardDetailViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
                 val user = repository.getCurrentUser()
+                if (user == null) {
+                    _uiState.value = _uiState.value.copy(error = "User not found", isLoading = false)
+                    return@launch
+                }
                 val comment = Comment(text = commentText, cardId = cardId, authorId = user.uid, authorName = user.displayName)
                 repository.addComment(comment)
                 _uiState.value = _uiState.value.copy(isLoading = false)

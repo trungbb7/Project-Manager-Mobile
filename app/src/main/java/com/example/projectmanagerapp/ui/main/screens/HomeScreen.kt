@@ -1,7 +1,6 @@
 package com.example.projectmanagerapp.ui.main.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -33,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -54,7 +52,8 @@ fun HomeScreen(
     onBoardClick: (Board) -> Unit,
     onAddBoardClick: () -> Unit,
     onEditBoard: (String) -> Unit,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    onSignOutClick: () -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -78,7 +77,9 @@ fun HomeScreen(
 
     ModalNavigationDrawer(
         drawerContent = {
-            DrawerContent(user = user, onProfileClick = onProfileClick)
+            DrawerContent(user = user,
+                onProfileClick = onProfileClick,
+                onSignOutClick = onSignOutClick)
         },
         drawerState = drawerState
     ) {
@@ -92,7 +93,8 @@ fun HomeScreen(
 
 
 @Composable
-fun DrawerContent(user: User?, onProfileClick: () -> Unit) {
+fun DrawerContent(user: User?, onProfileClick: () -> Unit,
+                  onSignOutClick: () -> Unit = {}) {
     ModalDrawerSheet {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -133,7 +135,7 @@ fun DrawerContent(user: User?, onProfileClick: () -> Unit) {
                 icon = {Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null)},
 
                 selected = false,
-                onClick = { /* Handle click */ }
+                onClick = { onSignOutClick() }
             )
         }
     }

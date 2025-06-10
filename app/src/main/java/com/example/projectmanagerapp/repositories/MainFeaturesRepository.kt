@@ -11,7 +11,10 @@ import kotlinx.coroutines.flow.Flow
 
 interface MainFeaturesRepository {
 
-    fun getCurrentUser(): User
+    suspend fun getCurrentUser(): User?
+    fun getCurrentUserId(): String?
+    fun signOut()
+
     fun getBoards(): Flow<List<Board>>
     suspend fun editBoardName(board: Board, newName: String)
 

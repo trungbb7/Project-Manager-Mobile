@@ -61,7 +61,11 @@ class CreateBoardViewModel(
                     }
                 }
 
-                val currentUserId = mainFeaturesRepository.getCurrentUser().uid
+                val currentUserId = mainFeaturesRepository.getCurrentUserId()
+                if(currentUserId == null) {
+                    _uiState.value = _uiState.value.copy(error = "Không thể lấy thông tin người dùng hiện tại", isLoading = false)
+                    return@launch
+                }
                 val board = Board(
                     name = _uiState.value.boardName,
                     ownerId = currentUserId,

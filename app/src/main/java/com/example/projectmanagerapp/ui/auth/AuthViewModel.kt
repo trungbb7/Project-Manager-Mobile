@@ -268,6 +268,11 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun signOut() {
+        auth.signOut()
+        _isUserLoggedIn.value = false
+    }
+
 
 
 

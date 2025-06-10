@@ -45,7 +45,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
     val context = LocalContext.current
     NavHost(
         navController = navController,
-        startDestination = AppDestinations.HOME_ROUTE,
+        startDestination = AppDestinations.LOGIN_ROUTE,
         modifier = modifier
     ) {
 
@@ -79,6 +79,12 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
                 },
                 onProfileClick = {
                     navController.navigate(AppDestinations.PROFILE_ROUTE)
+                },
+                onSignOutClick = {
+                    authViewModel.signOut()
+                    navController.navigate(AppDestinations.LOGIN_ROUTE) {
+                        popUpTo(AppDestinations.HOME_ROUTE) { inclusive = true }
+                    }
                 })
         }
         composable(AppDestinations.LOGIN_ROUTE) {
