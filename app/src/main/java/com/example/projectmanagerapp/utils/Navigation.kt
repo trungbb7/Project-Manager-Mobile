@@ -13,10 +13,10 @@ import com.example.projectmanagerapp.ui.auth.LoginScreen
 import com.example.projectmanagerapp.ui.auth.RegisterScreen
 import com.example.projectmanagerapp.viewmodels.BoardViewModel
 import com.example.projectmanagerapp.viewmodels.BoardViewModelFactory
-import com.example.projectmanagerapp.ui.main.screens.BoardsScreen
 import com.example.projectmanagerapp.ui.main.screens.CreateBoardScreen
-import com.example.projectmanagerapp.ui.main.HomeScreen
+import com.example.projectmanagerapp.ui.main.screens.HomeScreen
 import com.example.projectmanagerapp.repositories.MainFeaturesRepositoryImplement
+import com.example.projectmanagerapp.ui.auth.Profile
 import com.example.projectmanagerapp.ui.main.screens.BoardDetailScreen
 import com.example.projectmanagerapp.ui.main.screens.CardDetailScreen
 import com.example.projectmanagerapp.ui.main.screens.EditBoardScreen
@@ -30,29 +30,25 @@ import com.example.projectmanagerapp.viewmodels.CreateBoardViewModel
 import com.example.projectmanagerapp.viewmodels.CreateBoardViewModelFactory
 import com.example.projectmanagerapp.viewmodels.EditBoardViewModel
 import com.example.projectmanagerapp.viewmodels.EditBoardViewModelFactory
+import com.example.projectmanagerapp.viewmodels.HomeViewModel
+import com.example.projectmanagerapp.viewmodels.HomeViewModelFactory
 
 
 @Composable
 fun AppNavHost(navController: NavHostController, modifier: Modifier) {
     NavHost(
         navController = navController,
-        startDestination = AppDestinations.BOARD_ROUTE,
+        startDestination = AppDestinations.HOME_ROUTE,
         modifier = modifier
     ) {
         composable(AppDestinations.HOME_ROUTE) {
-            HomeScreen()
-        }
-        composable(AppDestinations.LOGIN_ROUTE) {
-            LoginScreen()
-        }
-        composable(AppDestinations.REGISTER_ROUTE) {
-            RegisterScreen()
-        }
-        composable(AppDestinations.BOARD_ROUTE) {
             val repository = MainFeaturesRepositoryImplement()
-            val viewModel: BoardViewModel = viewModel(factory = BoardViewModelFactory(repository))
-            BoardsScreen(
-                viewModel = viewModel,
+            val boardViewModel: BoardViewModel = viewModel(factory = BoardViewModelFactory(repository))
+            val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(repository))
+
+            HomeScreen(
+                homeViewModel = homeViewModel,
+                boardViewModel = boardViewModel,
                 onBoardClick = {
                     navController.navigate(
                         AppDestinations.BOARD_DETAIL_ROUTE.replace(
@@ -71,9 +67,19 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
                             boardId
                         )
                     )
-                }
-
-            )
+                },
+                onProfileClick = {
+                    navController.navigate(AppDestinations.PROFILE_ROUTE)
+                })
+        }
+        composable(AppDestinations.LOGIN_ROUTE) {
+            LoginScreen()
+        }
+        composable(AppDestinations.REGISTER_ROUTE) {
+            RegisterScreen()
+        }
+        composable(AppDestinations.PROFILE_ROUTE) {
+            Profile()
         }
         composable(AppDestinations.CREATE_BOARD_ROUTE) {
             val repository = MainFeaturesRepositoryImplement()

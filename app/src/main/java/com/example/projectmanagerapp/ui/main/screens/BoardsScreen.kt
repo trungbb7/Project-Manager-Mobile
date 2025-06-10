@@ -37,7 +37,8 @@ fun BoardsScreen(
     viewModel: BoardViewModel,
     onBoardClick: (Board) -> Unit,
     onAddBoardClick: () -> Unit,
-    onEditBoard: (String) -> Unit
+    onEditBoard: (String) -> Unit,
+    navigationIcon: @Composable () -> Unit
 ) {
 
 
@@ -96,11 +97,7 @@ fun BoardsScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Bảng của tôi") },
-                actions = {
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Filled.Search, contentDescription = "Tìm kiếm bảng")
-                    }
-                },
+                navigationIcon = navigationIcon,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer

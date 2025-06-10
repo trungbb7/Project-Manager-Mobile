@@ -60,3 +60,10 @@ class CardDetailViewModelFactory(
     }
 }
 
+class HomeViewModelFactory(
+    private val mainFeaturesRepository: MainFeaturesRepository,
+): ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return HomeViewModel(mainFeaturesRepository) as T
+    }
+}
