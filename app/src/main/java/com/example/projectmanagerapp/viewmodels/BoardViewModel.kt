@@ -2,7 +2,7 @@ package com.example.projectmanagerapp.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.projectmanagerapp.repositories.Repository
+import com.example.projectmanagerapp.repositories.MainFeaturesRepository
 import com.example.projectmanagerapp.ui.main.Board
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +15,7 @@ data class BoardUIState(
 )
 
 class BoardViewModel(
-    val repository: Repository
+    val mainFeaturesRepository: MainFeaturesRepository
 ): ViewModel() {
 
     private val _boardUIState = MutableStateFlow(BoardUIState())
@@ -29,7 +29,7 @@ class BoardViewModel(
         _boardUIState.value = _boardUIState.value.copy(idLoading = true)
         viewModelScope.launch {
             try {
-                repository.getBoards().collect { boards ->
+                mainFeaturesRepository.getBoards().collect { boards ->
                     _boardUIState.value = BoardUIState(
                         boards = boards,
                         idLoading = false
@@ -47,7 +47,7 @@ class BoardViewModel(
         _boardUIState.value = _boardUIState.value.copy(idLoading = true)
         viewModelScope.launch {
             try {
-                repository.editBoardName(board, newName)
+                mainFeaturesRepository.editBoardName(board, newName)
             } catch (e: Exception) {
                 _boardUIState.value = BoardUIState(
                     error = e.message
@@ -62,7 +62,7 @@ class BoardViewModel(
 
         viewModelScope.launch {
             try {
-                repository.deleteBoard(boardId)
+                mainFeaturesRepository.deleteBoard(boardId)
                 _boardUIState.value = _boardUIState.value.copy(idLoading = false)
             } catch (e: Exception) {
                 _boardUIState.value = _boardUIState.value.copy(error = e.message, idLoading = false)

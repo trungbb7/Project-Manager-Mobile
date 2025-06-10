@@ -1,6 +1,5 @@
 package com.example.projectmanagerapp.utils
 
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -16,13 +15,14 @@ import com.example.projectmanagerapp.viewmodels.BoardViewModelFactory
 import com.example.projectmanagerapp.ui.main.screens.BoardsScreen
 import com.example.projectmanagerapp.ui.main.screens.CreateBoardScreen
 import com.example.projectmanagerapp.ui.main.HomeScreen
-import com.example.projectmanagerapp.repositories.RepositoryImplement
-import com.example.projectmanagerapp.ui.main.Card
-import com.example.projectmanagerapp.ui.main.PMList
+import com.example.projectmanagerapp.repositories.MainFeaturesRepositoryImplement
 import com.example.projectmanagerapp.ui.main.screens.BoardDetailScreen
+import com.example.projectmanagerapp.ui.main.screens.CardDetailScreen
 import com.example.projectmanagerapp.ui.main.screens.EditBoardScreen
 import com.example.projectmanagerapp.viewmodels.BoardDetailViewModel
 import com.example.projectmanagerapp.viewmodels.BoardDetailViewModelFactory
+import com.example.projectmanagerapp.viewmodels.CardDetailViewModel
+import com.example.projectmanagerapp.viewmodels.CardDetailViewModelFactory
 import com.example.projectmanagerapp.viewmodels.CreateBoardViewModel
 import com.example.projectmanagerapp.viewmodels.CreateBoardViewModelFactory
 import com.example.projectmanagerapp.viewmodels.EditBoardViewModel
@@ -46,12 +46,17 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             RegisterScreen()
         }
         composable(AppDestinations.BOARD_ROUTE) {
-            val repository = RepositoryImplement()
+            val repository = MainFeaturesRepositoryImplement()
             val viewModel: BoardViewModel = viewModel(factory = BoardViewModelFactory(repository))
             BoardsScreen(
                 viewModel = viewModel,
                 onBoardClick = {
-                    navController.navigate(AppDestinations.BOARD_DETAIL_ROUTE.replace("{boardId}", it.id))
+                    navController.navigate(
+                        AppDestinations.BOARD_DETAIL_ROUTE.replace(
+                            "{boardId}",
+                            it.id
+                        )
+                    )
                 },
                 onAddBoardClick = {
                     navController.navigate(AppDestinations.CREATE_BOARD_ROUTE)
@@ -68,7 +73,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             )
         }
         composable(AppDestinations.CREATE_BOARD_ROUTE) {
-            val repository = RepositoryImplement()
+            val repository = MainFeaturesRepositoryImplement()
             val viewModel: CreateBoardViewModel =
                 viewModel(factory = CreateBoardViewModelFactory(repository))
             CreateBoardScreen(
@@ -86,7 +91,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             arguments = listOf(navArgument("boardId") { type = NavType.StringType })
         ) { backStackEntry ->
             val boardId = backStackEntry.arguments?.getString("boardId")
-            val repository = RepositoryImplement()
+            val repository = MainFeaturesRepositoryImplement()
             val viewModel: EditBoardViewModel =
                 viewModel(factory = EditBoardViewModelFactory(repository, boardId!!))
             EditBoardScreen(
@@ -100,21 +105,56 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             arguments = listOf(navArgument("boardId") { type = NavType.StringType })
         ) { backStackEntry ->
             val boardId = backStackEntry.arguments?.getString("boardId")
-            val repository = RepositoryImplement()
+            val repository = MainFeaturesRepositoryImplement()
             val viewModel: BoardDetailViewModel =
                 viewModel(factory = BoardDetailViewModelFactory(repository, boardId!!))
             BoardDetailScreen(
                 viewModel,
                 onNavigateBack = { navController.popBackStack() },
-                onCardClick = { card: Card, pmList: PMList ->},
-                onAddListToBoard = {s: String ->},
-                onRenameList = {s, s1 ->},
-                onDeleteList = {s ->},
-                onAddCardToList = {s, s1 ->},
-                onUpdateCard = {card: Card ->},
-                onDeleteCard = {s, s1 ->},
-                onConfirmMoveCard = {s, s1, s2 ->},
+                onCardItemClicked = { listId, cardId ->
+                    navController.navigate(
+                        AppDestinations.CARD_DETAIL_ROUTE
+                            .replace("{boardId}", boardId)
+                            .replace("{listId}", listId)
+                            .replace("{cardId}", cardId)
+                    )
+                }
             )
+        }
+
+        composable(
+            route = AppDestinations.CARD_DETAIL_ROUTE,
+            arguments = listOf(
+                navArgument("boardId") { type = NavType.StringType },
+                navArgument("listId") { type = NavType.StringType },
+                navArgument("cardId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val boardId = backStackEntry.arguments?.getString("boardId")
+            val listId = backStackEntry.arguments?.getString("listId")
+            val cardId = backStackEntry.arguments?.getString("cardId")
+            val repository = MainFeaturesRepositoryImplement()
+            val viewModel: CardDetailViewModel =
+                viewModel(factory = CardDetailViewModelFactory(repository, boardId!!, listId!!, cardId!!))
+            CardDetailScreen(
+                viewModel = viewModel,
+                onNavigateBack = {
+                    navController.popBackStack()},
+                listName = "",
+                boardName = "",
+                onUpdateCardTitle = {s ->},
+                onUpdateCardDescription = {s ->},
+                onSetDueDate = {l ->},
+                onAddChecklist = {s ->},
+                onUpdateChecklistTitle = {s, s2 ->},
+                onDeleteChecklist = {s ->},
+                onAddChecklistItem = {s, s2 ->},
+                onUpdateChecklistItem = {s, s2, s3, b ->},
+                onDeleteChecklistItem = {s, s2 ->},
+                onAddComment = {s ->},
+                onDeleteCard = {}
+            )
+
 
         }
     }

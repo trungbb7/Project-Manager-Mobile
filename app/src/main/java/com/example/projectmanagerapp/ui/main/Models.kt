@@ -3,6 +3,7 @@ package com.example.projectmanagerapp.ui.main
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.ServerTimestamp
 import java.util.Date
+import java.util.UUID
 
 
 data class User(
@@ -18,9 +19,7 @@ data class Card(
     val title: String = "",
     val description: String? = null,
     val dueDate: Long? = null,
-    val checkLists: List<Checklist> = emptyList(),
-    val comments: List<Comment> = emptyList(),
-    val createdDate: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis()
 )
 
 data class PMList(
@@ -43,14 +42,23 @@ data class Board(
 
 // Các model phụ
 data class ChecklistItem(
-    val text: String = "",
-    val isChecked: Boolean = false)
+    val id : String = UUID.randomUUID().toString(),
+    var text: String = "",
+    var isChecked: Boolean = false,
+    val createdAt: Long = System.currentTimeMillis()
+)
 
 data class Checklist(
+    @DocumentId val id: String = "",
+    val cardId: String = "",
     val title: String = "",
-    val items: List<ChecklistItem> = emptyList())
+    var items: List<ChecklistItem> = emptyList(),
+    val createdAt: Long = System.currentTimeMillis()
+)
 
 data class Comment(
+    @DocumentId val id: String = "",
+    val cardId: String = "",
     val authorId: String = "",
     val authorName: String = "",
     val text: String = "",

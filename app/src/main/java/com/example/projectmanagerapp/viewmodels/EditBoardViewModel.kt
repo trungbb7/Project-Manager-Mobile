@@ -3,7 +3,7 @@ package com.example.projectmanagerapp.viewmodels
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.projectmanagerapp.repositories.Repository
+import com.example.projectmanagerapp.repositories.MainFeaturesRepository
 import com.example.projectmanagerapp.utils.BackgroundType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +24,7 @@ data class EditBoardViewModelState(
 )
 
 
-class EditBoardViewModel(private val repository: Repository, private val boardId: String) :
+class EditBoardViewModel(private val mainFeaturesRepository: MainFeaturesRepository, private val boardId: String) :
     ViewModel() {
     private val _uiState = MutableStateFlow(EditBoardViewModelState())
     val uiState: StateFlow<EditBoardViewModelState> = _uiState.asStateFlow()
@@ -35,7 +35,7 @@ class EditBoardViewModel(private val repository: Repository, private val boardId
 
 
             viewModelScope.launch {
-                repository.getBoard(boardId).collect { board ->
+                mainFeaturesRepository.getBoard(boardId).collect { board ->
                     _uiState.value = _uiState.value.copy(
                         boardName = board.name,
                         prevBoardName = board.name,
@@ -77,7 +77,7 @@ class EditBoardViewModel(private val repository: Repository, private val boardId
         try {
             viewModelScope.launch {
                 val imageUrl: String? = _uiState.value.selectedImageUri?.let {
-                    repository.uploadBoardBackgroundImage(it)
+                    mainFeaturesRepository.uploadBoardBackgroundImage(it)
                 }
 
                 var data = hashMapOf<String, Any?>()
@@ -116,7 +116,7 @@ class EditBoardViewModel(private val repository: Repository, private val boardId
                     }
                 }
 
-                repository.updateBoard(boardId, data)
+                mainFeaturesRepository.updateBoard(boardId, data)
                 _uiState.value = _uiState.value.copy(
                     success = true, isLoading = false
                 )

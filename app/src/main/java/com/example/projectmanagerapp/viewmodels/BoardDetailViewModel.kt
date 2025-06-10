@@ -3,7 +3,7 @@ package com.example.projectmanagerapp.viewmodels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.projectmanagerapp.repositories.Repository
+import com.example.projectmanagerapp.repositories.MainFeaturesRepository
 import com.example.projectmanagerapp.ui.main.Board
 import com.example.projectmanagerapp.ui.main.Card
 import com.example.projectmanagerapp.ui.main.PMList
@@ -28,7 +28,7 @@ data class BoardDetailUIState(
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class BoardDetailViewModel(val repository: Repository, val boardId: String): ViewModel() {
+class BoardDetailViewModel(val mainFeaturesRepository: MainFeaturesRepository, val boardId: String): ViewModel() {
 
     private val _uiState = MutableStateFlow(BoardDetailUIState())
     val uiState: StateFlow<BoardDetailUIState> = _uiState.asStateFlow()
@@ -38,15 +38,15 @@ class BoardDetailViewModel(val repository: Repository, val boardId: String): Vie
         viewModelScope.launch {
             var pmLists = emptyList<PMList>()
 
-            val boardFlow = repository.getBoard(boardId)
+            val boardFlow = mainFeaturesRepository.getBoard(boardId)
 
-            val cardsByListFlow = repository.getLists(boardId).flatMapLatest { lists ->
+            val cardsByListFlow = mainFeaturesRepository.getLists(boardId).flatMapLatest { lists ->
                 if (lists.isEmpty()) {
                     MutableStateFlow(emptyMap<String, List<Card>>())
                 } else {
                     pmLists = lists
                     val cardsFlow: List<Flow<Pair<String, List<Card>>>> = lists.map { list ->
-                        repository.getCards(list.id).map { cards ->
+                        mainFeaturesRepository.getCards(list.id).map { cards ->
                             Pair(list.id, cards)
                         }
                     }
@@ -76,7 +76,7 @@ class BoardDetailViewModel(val repository: Repository, val boardId: String): Vie
     fun addCard(card: Card) {
         viewModelScope.launch {
             try{
-                repository.addCard(card)
+                mainFeaturesRepository.addCard(card)
             }catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message)
             }
@@ -86,7 +86,7 @@ class BoardDetailViewModel(val repository: Repository, val boardId: String): Vie
     fun updateCard(card: Card) {
         viewModelScope.launch {
             try {
-                repository.updateCard(card)
+                mainFeaturesRepository.updateCard(card)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message)
             }
@@ -96,7 +96,7 @@ class BoardDetailViewModel(val repository: Repository, val boardId: String): Vie
     fun deleteCard(cardId: String) {
         viewModelScope.launch {
             try {
-                repository.deleteCard(cardId)
+                mainFeaturesRepository.deleteCard(cardId)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message)
             }
@@ -106,7 +106,7 @@ class BoardDetailViewModel(val repository: Repository, val boardId: String): Vie
     fun createList(list: PMList) {
         viewModelScope.launch {
             try {
-                repository.createList(list)
+                mainFeaturesRepository.createList(list)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message)
             }
@@ -116,7 +116,7 @@ class BoardDetailViewModel(val repository: Repository, val boardId: String): Vie
     fun updateList(list: PMList) {
         viewModelScope.launch {
             try {
-                repository.updateList(list)
+                mainFeaturesRepository.updateList(list)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message)
             }
@@ -126,7 +126,7 @@ class BoardDetailViewModel(val repository: Repository, val boardId: String): Vie
     fun deleteList(listId: String) {
         viewModelScope.launch {
             try {
-                repository.deleteList(listId)
+                mainFeaturesRepository.deleteList(listId)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message)
             }
@@ -136,7 +136,7 @@ class BoardDetailViewModel(val repository: Repository, val boardId: String): Vie
     fun moveCard(cardId: String, targetListId: String){
         viewModelScope.launch {
             try {
-                repository.moveCard(cardId, targetListId)
+                mainFeaturesRepository.moveCard(cardId, targetListId)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message)
             }

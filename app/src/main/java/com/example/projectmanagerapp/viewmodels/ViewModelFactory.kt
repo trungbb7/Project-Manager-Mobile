@@ -2,39 +2,50 @@ package com.example.projectmanagerapp.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.projectmanagerapp.repositories.Repository
+import com.example.projectmanagerapp.repositories.MainFeaturesRepository
 
 class BoardViewModelFactory(
-    private val repository: Repository
+    private val mainFeaturesRepository: MainFeaturesRepository
 ): ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return BoardViewModel(repository) as T
+        return BoardViewModel(mainFeaturesRepository) as T
     }
 }
 
 class CreateBoardViewModelFactory(
-    private val repository: Repository
+    private val mainFeaturesRepository: MainFeaturesRepository
 ): ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return CreateBoardViewModel(repository) as T
+        return CreateBoardViewModel(mainFeaturesRepository) as T
     }
 }
 
 class EditBoardViewModelFactory(
-    private val repository: Repository,
+    private val mainFeaturesRepository: MainFeaturesRepository,
     private val boardId: String
 ): ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return EditBoardViewModel(repository, boardId) as T
+        return EditBoardViewModel(mainFeaturesRepository, boardId) as T
     }
 }
 
 class BoardDetailViewModelFactory(
-    private val repository: Repository,
+    private val mainFeaturesRepository: MainFeaturesRepository,
     private val boardId: String
 ): ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return BoardDetailViewModel(repository, boardId) as T
+        return BoardDetailViewModel(mainFeaturesRepository, boardId) as T
+    }
+}
+
+class CardDetailViewModelFactory(
+    private val mainFeaturesRepository: MainFeaturesRepository,
+    private val boardId: String,
+    private val listId: String,
+    private val cardId: String
+): ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return CardDetailViewModel(mainFeaturesRepository, boardId, listId, cardId) as T
     }
 }
 

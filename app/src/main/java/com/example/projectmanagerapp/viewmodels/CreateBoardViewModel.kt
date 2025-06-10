@@ -3,7 +3,7 @@ package com.example.projectmanagerapp.viewmodels
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.projectmanagerapp.repositories.Repository
+import com.example.projectmanagerapp.repositories.MainFeaturesRepository
 import com.example.projectmanagerapp.ui.main.Board
 import com.example.projectmanagerapp.utils.BackgroundType
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +27,7 @@ data class CreateBoardState(
 )
 
 class CreateBoardViewModel(
-    private val repository: Repository
+    private val mainFeaturesRepository: MainFeaturesRepository
 ): ViewModel() {
 
     private val _uiState = MutableStateFlow(CreateBoardState())
@@ -57,11 +57,11 @@ class CreateBoardViewModel(
                 var imageUrl: String? = null
                 if(_uiState.value.backgroundType == BackgroundType.IMAGE) {
                     imageUrl =  _uiState.value.selectedImageUri?.let {
-                        repository.uploadBoardBackgroundImage(it)
+                        mainFeaturesRepository.uploadBoardBackgroundImage(it)
                     }
                 }
 
-                val currentUserId = repository.getCurrentUser().id
+                val currentUserId = mainFeaturesRepository.getCurrentUser().id
                 val board = Board(
                     name = _uiState.value.boardName,
                     ownerId = currentUserId,
@@ -69,7 +69,7 @@ class CreateBoardViewModel(
                     backgroundImage = imageUrl,
                     backgroundColor = _uiState.value.selectedBackgroundColor
                 )
-                repository.createBoard(board)
+                mainFeaturesRepository.createBoard(board)
                 _uiState.value = _uiState.value.copy(success = true, isLoading = false)
             }catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message, isLoading = false, success = false)

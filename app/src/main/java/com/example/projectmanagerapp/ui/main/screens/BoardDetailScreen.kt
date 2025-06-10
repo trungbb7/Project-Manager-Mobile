@@ -38,17 +38,7 @@ import com.example.projectmanagerapp.viewmodels.BoardDetailViewModel
 fun BoardDetailScreen(
     viewModel: BoardDetailViewModel,
     onNavigateBack: () -> Unit,
-    onCardClick: (Card, PMList) -> Unit,
-    // List Actions
-    onAddListToBoard: (String) -> Unit,
-    onRenameList: (listId: String, newName: String) -> Unit,
-    onDeleteList: (listId: String) -> Unit,
-    // Card Actions
-    onAddCardToList: (listId: String, cardTitle: String) -> Unit,
-    onUpdateCard: (updatedCard: Card) -> Unit,
-    onDeleteCard: (cardId: String, listId: String) -> Unit,
-    // Move Card Action
-    onConfirmMoveCard: (cardId: String, sourceListId: String, targetListId: String) -> Unit
+    onCardItemClicked: (listId: String, cardId: String) -> Unit
 ) {
     
     val uiState by viewModel.uiState.collectAsState()
@@ -105,7 +95,6 @@ fun BoardDetailScreen(
                         // Nếu đang trong chế độ di chuyển và click vào thẻ khác thẻ đang chọn, không làm gì cả
                         // Hoặc có thể cho phép click để mở chi tiết nếu muốn
                         if (cardSelectedForMoveInfo == null || cardSelectedForMoveInfo?.first == card.id) {
-                            onCardClick(card, pmList)
                         }
                     },
                     // List Menu Actions
@@ -134,6 +123,10 @@ fun BoardDetailScreen(
                             cardSelectedForMoveInfo = null
                         }
                     },
+                    onCardItemClicked = { listId, cardId ->
+                        onCardItemClicked(listId, cardId)
+                    }
+
                 )
             }
             item {
@@ -161,6 +154,7 @@ fun BoardDetailScreen(
 fun ListItemColumn(
     pmList: PMList,
     cards: List<Card>,
+    onCardItemClicked: (listId: String, cardId: String) -> Unit,
     cardSelectedForMoveInfo: Pair<String, String>?, // (cardId, sourceListId)
     onCardClick: (Card) -> Unit,
     onRenameList: (String) -> Unit,
@@ -169,7 +163,7 @@ fun ListItemColumn(
     onUpdateCard: (Card) -> Unit,
     onDeleteCard: (cardId: String) -> Unit,
     onToggleSelectCardForMove: (cardId: String, sourceListId: String) -> Unit,
-    onConfirmMoveCardToList: (targetListId: String) -> Unit // Khi list này là đích
+    onConfirmMoveCardToList: (targetListId: String) -> Unit
 ) {
     var showAddCardInput by remember { mutableStateOf(false) }
     var newCardTitle by remember { mutableStateOf("") }
@@ -193,7 +187,7 @@ fun ListItemColumn(
                     .fillMaxWidth()
                     .padding(bottom = 8.dp)
             ) {
-                if (isEditingListTitle) { /* ... Phần sửa tên list giữ nguyên ... */
+                if (isEditingListTitle) {
                     OutlinedTextField(
                         value = editingListTitle,
                         onValueChange = { editingListTitle = it },
@@ -242,7 +236,6 @@ fun ListItemColumn(
                             onDeleteList()
                             showListMenu = false
                         },
-                        // Thêm tùy chọn "Move selected card here"
                         showMoveCardToThisListOption = cardSelectedForMoveInfo != null && cardSelectedForMoveInfo.second != pmList.id,
                         onMoveCardToThisListClick = {
                             onConfirmMoveCardToList(pmList.id)
@@ -260,17 +253,21 @@ fun ListItemColumn(
                 itemsIndexed(cards, key = { _, card -> card.id }) { _, card ->
                     CardItem(
                         card = card,
+                        listId = pmList.id,
                         isCurrentlySelectedForMove = cardSelectedForMoveInfo?.first == card.id,
                         onClick = { onCardClick(card) },
                         onUpdateCard = onUpdateCard,
                         onDeleteCard = onDeleteCard,
-                        onSelectForMove = { onToggleSelectCardForMove(card.id, pmList.id) }
+                        onSelectForMove = { onToggleSelectCardForMove(card.id, pmList.id) },
+                        onCardItemClicked = {listId, cardId ->
+                            onCardItemClicked(listId, cardId)
+                        }
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            if (showAddCardInput) { /* ... Phần thêm card mới giữ nguyên ... */
+            if (showAddCardInput) {
                 OutlinedTextField(
                     value = newCardTitle,
                     onValueChange = { newCardTitle = it },
@@ -287,7 +284,7 @@ fun ListItemColumn(
                 Button(
                     onClick = {
                         if (newCardTitle.isNotBlank()) {
-                            onAddCardFromMenu(newCardTitle) // Sử dụng callback mới
+                            onAddCardFromMenu(newCardTitle)
                             newCardTitle = ""
                             showAddCardInput = false
                         }
@@ -312,11 +309,13 @@ fun ListItemColumn(
 @Composable
 fun CardItem(
     card: Card,
+    onCardItemClicked: (listId: String, cardId: String) -> Unit,
+    listId: String,
     isCurrentlySelectedForMove: Boolean,
     onClick: () -> Unit,
     onUpdateCard: (Card) -> Unit,
     onDeleteCard: (cardId: String) -> Unit,
-    onSelectForMove: () -> Unit // Callback khi chọn "Di chuyển thẻ" từ menu của card này
+    onSelectForMove: () -> Unit
 ) {
     var showCardMenu by remember { mutableStateOf(false) }
     var isEditingCardTitle by remember { mutableStateOf(false) }
@@ -354,7 +353,7 @@ fun CardItem(
                     modifier = Modifier.size(18.dp).padding(end = 4.dp)
                 )
             }
-            if (isEditingCardTitle) { /* ... Phần sửa tên card giữ nguyên ... */
+            if (isEditingCardTitle) {
                 OutlinedTextField(
                     value = editingCardTitle,
                     onValueChange = { editingCardTitle = it },
@@ -374,7 +373,9 @@ fun CardItem(
             } else {
                 Text(
                     text = card.title,
-                    modifier = Modifier.weight(1f).padding(vertical = 6.dp),
+                    modifier = Modifier.weight(1f).padding(vertical = 6.dp).clickable {
+                        onCardItemClicked(listId, card.id)
+                    },
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -413,8 +414,8 @@ fun ListOptionsMenu(
     onRenameClick: () -> Unit,
     onAddCardClick: () -> Unit,
     onDeleteClick: () -> Unit,
-    showMoveCardToThisListOption: Boolean, // Điều kiện hiển thị tùy chọn di chuyển
-    onMoveCardToThisListClick: () -> Unit  // Hành động khi di chuyển thẻ vào list này
+    showMoveCardToThisListOption: Boolean,
+    onMoveCardToThisListClick: () -> Unit
 ) {
     DropdownMenu(
         expanded = expanded,
@@ -481,9 +482,9 @@ fun CardOptionsMenu(
     }
 }
 
-// --- Composable cho cột "Thêm danh sách mới" (Không thay đổi) ---
+// --- Composable cho cột "Thêm danh sách mới"
 @Composable
-fun AddListColumn( /* ... Giữ nguyên ... */
+fun AddListColumn(
                    showInput: Boolean,
                    onShowInputToggle: () -> Unit,
                    listTitle: String,
@@ -538,107 +539,3 @@ fun AddListColumn( /* ... Giữ nguyên ... */
         }
     }
 }
-
-
-// --- Preview ---
-//@Preview(showBackground = true, device = "spec:width=1080px,height=2340px,dpi=440")
-//@Composable
-//fun BoardDetailScreenWithMoveCardPreview() {
-//    val initialBoard = Board(
-//        id = "board1",
-//        name = "Dự án Di Chuyển Thẻ",
-//        backgroundColor = Color(0xFF0079BF),
-//        lists = mutableListOf(
-//            PMList(
-//                id = "list1", name = "Cần làm", cards = mutableListOf(
-//                    Card(title = "Task A", listId = "list1"),
-//                    Card(title = "Task B", listId = "list1")
-//                )
-//            ),
-//            PMList(
-//                id = "list2", name = "Đang làm", cards = mutableListOf(
-//                    Card(title = "Task C", listId = "list2")
-//                )
-//            ),
-//            PMList(id = "list3", name = "Hoàn thành", cards = mutableListOf())
-//        )
-//    )
-//    var boardState by remember { mutableStateOf(initialBoard) }
-//
-//    MaterialTheme {
-//        BoardDetailScreen(
-//            board = boardState,
-//            onNavigateBack = {},
-//            onCardClick = { card, list -> println("Clicked card ${card.title} in list ${list.name}") },
-//            onAddListToBoard = { title ->
-//                val newList = PMList(name = title)
-//                boardState = boardState.copy(lists = (boardState.lists + newList).toMutableList())
-//            },
-//            onRenameList = { listId, newName ->
-//                boardState = boardState.copy(
-//                    lists = boardState.lists.map { if (it.id == listId) it.copy(name = newName) else it }.toMutableList()
-//                )
-//            },
-//            onDeleteList = { listId ->
-//                boardState = boardState.copy(
-//                    lists = boardState.lists.filterNot { it.id == listId }.toMutableList()
-//                )
-//            },
-//            onAddCardToList = { listId, cardTitle ->
-//                val newCard = Card(title = cardTitle, listId = listId)
-//                boardState = boardState.copy(
-//                    lists = boardState.lists.map { list ->
-//                        if (list.id == listId) list.copy(cards = (list.cards + newCard).toMutableList()) else list
-//                    }.toMutableList()
-//                )
-//            },
-//            onUpdateCard = { updatedCard ->
-//                boardState = boardState.copy(
-//                    lists = boardState.lists.map { list ->
-//                        list.copy(cards = list.cards.map { card ->
-//                            if (card.id == updatedCard.id) updatedCard else card
-//                        }.toMutableList())
-//                    }.toMutableList()
-//                )
-//            },
-//            onDeleteCard = { cardId, listId ->
-//                boardState = boardState.copy(
-//                    lists = boardState.lists.map { list ->
-//                        if (list.id == listId) list.copy(cards = list.cards.filterNot { it.id == cardId }.toMutableList()) else list
-//                    }.toMutableList()
-//                )
-//            },
-//            onConfirmMoveCard = { cardId, sourceListId, targetListId ->
-//                var cardToMove: Card? = null
-//                // Tìm và xóa card khỏi sourceList
-//                val listsAfterRemoving = boardState.lists.map { list ->
-//                    if (list.id == sourceListId) {
-//                        val foundCard = list.cards.find { it.id == cardId }
-//                        if (foundCard != null) {
-//                            cardToMove = foundCard.copy(listId = targetListId) // Cập nhật listId mới cho card
-//                            list.copy(cards = list.cards.filterNot { it.id == cardId }.toMutableList())
-//                        } else {
-//                            list
-//                        }
-//                    } else {
-//                        list
-//                    }
-//                }
-//                // Thêm card vào targetList
-//                if (cardToMove != null) {
-//                    val listsAfterAdding = listsAfterRemoving.map { list ->
-//                        if (list.id == targetListId) {
-//                            list.copy(cards = (list.cards + cardToMove!!).toMutableList())
-//                        } else {
-//                            list
-//                        }
-//                    }
-//                    boardState = boardState.copy(lists = listsAfterAdding.toMutableList())
-//                } else { // Nếu không tìm thấy card (trường hợp hiếm)
-//                    boardState = boardState.copy(lists = listsAfterRemoving.toMutableList())
-//                }
-//                println("Moved card $cardId from $sourceListId to $targetListId")
-//            }
-//        )
-//    }
-//}

@@ -6,7 +6,7 @@ object AppDestinations {
     const val CREATE_BOARD_ROUTE = "create_board"
     const val EDIT_BOARD_ROUTE = "edit_board/{boardId}"
     const val BOARD_DETAIL_ROUTE = "board_detail{boardId}"
-    const val CARD_DETAIL_ROUTE = "card_detail"
+    const val CARD_DETAIL_ROUTE = "card_detail/{boardId}/{listId}/{cardId}"
     const val LOGIN_ROUTE = "login"
     const val REGISTER_ROUTE = "register"
     const val DEMO = "demo"
@@ -18,6 +18,8 @@ object Constants {
     const val BOARD_COLLECTION = "boards"
     const val CARD_COLLECTION = "cards"
     const val LIST_COLLECTION = "pm_list"
+    const val CHECKLIST_COLLECTION = "checklists"
+    const val COMMENT_COLLECTION = "comments"
 
     const val BOARD_BACKGROUND_REF = "board_backgrounds"
 
