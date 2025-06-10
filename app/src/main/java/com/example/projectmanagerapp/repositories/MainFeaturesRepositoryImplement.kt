@@ -116,9 +116,15 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
                 close(error)
                 return@addSnapshotListener
             }
-            if (snapshot != null) {
+            if (snapshot != null && snapshot.exists()) {
                 val card = snapshot.toObject(Card::class.java)
-                trySend(card!!)
+                if(card != null) {
+                trySend(card)
+                }else {
+                    close(Exception("Card is null"))
+                }
+            }else {
+                close(Exception("Card not found"))
             }
         }
         awaitClose { listener.remove() }

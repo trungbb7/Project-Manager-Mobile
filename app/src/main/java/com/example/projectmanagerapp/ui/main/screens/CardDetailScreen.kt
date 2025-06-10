@@ -44,6 +44,8 @@ import com.example.projectmanagerapp.ui.main.ChecklistItem
 import com.example.projectmanagerapp.ui.main.Comment
 import com.example.projectmanagerapp.utils.Utils
 import com.example.projectmanagerapp.viewmodels.CardDetailViewModel
+import com.example.projectmanagerapp.viewmodels.NavigationEvent
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 
@@ -51,20 +53,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun CardDetailScreen(
     viewModel: CardDetailViewModel,
-    listName: String,
-    boardName: String,
     onNavigateBack: () -> Unit,
-    onUpdateCardTitle: (newTitle: String) -> Unit,
-    onUpdateCardDescription: (newDescription: String?) -> Unit,
-    onSetDueDate: (timestamp: Long?) -> Unit,
-    onAddChecklist: (checklistTitle: String) -> Unit,
-    onUpdateChecklistTitle: (checklistId: String, newTitle: String) -> Unit,
-    onDeleteChecklist: (checklistId: String) -> Unit,
-    onAddChecklistItem: (checklistId: String, itemText: String) -> Unit,
-    onUpdateChecklistItem: (checklistId: String, itemId: String, newText: String, isChecked: Boolean) -> Unit,
-    onDeleteChecklistItem: (checklistId: String, itemId: String) -> Unit,
-    onAddComment: (text: String) -> Unit,
-    onDeleteCard: () -> Unit
+
 ) {
 
     val uiState by viewModel.uiState.collectAsState()
@@ -81,6 +71,16 @@ fun CardDetailScreen(
     val checklists = uiState.checklists
     val isLoading = uiState.isLoading
     val error = uiState.error
+
+    LaunchedEffect(key1 = true) {
+        viewModel.navigationEvent.collectLatest { event ->
+            when(event) {
+                NavigationEvent.NavigationBack -> {
+                    onNavigateBack()
+                }
+            }
+        }
+    }
 
 
 
@@ -389,7 +389,8 @@ fun CardDetailScreen(
                                 duration = SnackbarDuration.Short
                             )
                             if (result == SnackbarResult.ActionPerformed) {
-                                onDeleteCard()
+                                viewModel.deleteCard()
+//                                onNavigateBack()
                             }
                         }
                     },

@@ -8,12 +8,18 @@ import com.example.projectmanagerapp.ui.main.Card
 import com.example.projectmanagerapp.ui.main.Checklist
 import com.example.projectmanagerapp.ui.main.ChecklistItem
 import com.example.projectmanagerapp.ui.main.Comment
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+
+sealed class NavigationEvent {
+    object NavigationBack: NavigationEvent()
+}
 
 data class CardDetailUIState(
     val boardName: String = "",
@@ -33,6 +39,9 @@ class CardDetailViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CardDetailUIState())
     val uiState: StateFlow<CardDetailUIState> = _uiState.asStateFlow()
+
+    private val _navigationEvent = MutableSharedFlow<NavigationEvent>()
+    val navigationEvent = _navigationEvent.asSharedFlow()
 
     init {
         fetchData()
@@ -250,7 +259,7 @@ class CardDetailViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
                 repository.deleteCard(cardId)
-                _uiState.value = _uiState.value.copy(isLoading = false)
+                _navigationEvent.emit(NavigationEvent.NavigationBack)
             }catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
             }

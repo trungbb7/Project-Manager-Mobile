@@ -139,23 +139,8 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             CardDetailScreen(
                 viewModel = viewModel,
                 onNavigateBack = {
-                    navController.popBackStack()},
-                listName = "",
-                boardName = "",
-                onUpdateCardTitle = {s ->},
-                onUpdateCardDescription = {s ->},
-                onSetDueDate = {l ->},
-                onAddChecklist = {s ->},
-                onUpdateChecklistTitle = {s, s2 ->},
-                onDeleteChecklist = {s ->},
-                onAddChecklistItem = {s, s2 ->},
-                onUpdateChecklistItem = {s, s2, s3, b ->},
-                onDeleteChecklistItem = {s, s2 ->},
-                onAddComment = {s ->},
-                onDeleteCard = {}
+                    navController.popBackStack()}
             )
-
-
         }
     }
 }
