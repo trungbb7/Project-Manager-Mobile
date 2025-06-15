@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
@@ -20,6 +19,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
@@ -77,27 +77,40 @@ fun HomeScreen(
 
     ModalNavigationDrawer(
         drawerContent = {
-            DrawerContent(user = user,
-                onProfileClick = onProfileClick,
-                onSignOutClick = onSignOutClick)
+            DrawerContent(
+                user = user,
+                onProfileClick = {
+                    onProfileClick()
+                    scope.launch { drawerState.close() }
+                },
+                onSignOutClick = {
+                    onSignOutClick()
+                    scope.launch { drawerState.close() }
+                }
+            )
         },
         drawerState = drawerState
     ) {
-        BoardsScreen(viewModel = boardViewModel,
+        BoardsScreen(
+            viewModel = boardViewModel,
             onBoardClick = onBoardClick,
             onAddBoardClick = onAddBoardClick,
             onEditBoard = onEditBoard,
-            navigationIcon = navigationIcon)
+            navigationIcon = navigationIcon
+        )
     }
 }
 
 
 @Composable
-fun DrawerContent(user: User?, onProfileClick: () -> Unit,
-                  onSignOutClick: () -> Unit = {}) {
+fun DrawerContent(
+    user: User?, onProfileClick: () -> Unit,
+    onSignOutClick: () -> Unit = {}
+) {
     ModalDrawerSheet {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             Spacer(Modifier.height(40.dp))
@@ -111,28 +124,42 @@ fun DrawerContent(user: User?, onProfileClick: () -> Unit,
                     .build(),
                 contentDescription = "Ảnh đại diện",
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(60.dp)
+                modifier = Modifier
+                    .size(60.dp)
                     .clip(CircleShape)
-                    .border(BorderStroke(2.dp, androidx.compose.material3.MaterialTheme.colorScheme.surface), CircleShape)
+                    .border(
+                        BorderStroke(
+                            2.dp,
+                            MaterialTheme.colorScheme.surface
+                        ), CircleShape
+                    )
             )
 //            Image(painter = painterResource(id = R.drawable.homer_avatar), contentDescription = null,
 //                contentScale = ContentScale.Crop,
 //                modifier = Modifier.size(60.dp).clip(CircleShape))
 
             Spacer(Modifier.height(20.dp))
-            Text(user?.displayName.toString(), modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp), style = Typography.titleLarge)
-            Text(user?.email.toString(), modifier = Modifier.padding(start = 16.dp, bottom = 16.dp), style = MaterialTheme.typography.overline)
+            Text(
+                user?.displayName.toString(),
+                modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp),
+                style = Typography.titleLarge
+            )
+            Text(
+                user?.email.toString(),
+                modifier = Modifier.padding(start = 16.dp, bottom = 16.dp),
+                style = MaterialTheme.typography.labelSmall
+            )
             HorizontalDivider()
 
             NavigationDrawerItem(
                 label = { Text("Thông tin") },
-                icon = {Icon(Icons.Default.AccountCircle, contentDescription = null)},
+                icon = { Icon(Icons.Default.AccountCircle, contentDescription = null) },
                 selected = false,
                 onClick = { onProfileClick() }
             )
             NavigationDrawerItem(
                 label = { Text("Đăng xuất") },
-                icon = {Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null)},
+                icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null) },
 
                 selected = false,
                 onClick = { onSignOutClick() }
