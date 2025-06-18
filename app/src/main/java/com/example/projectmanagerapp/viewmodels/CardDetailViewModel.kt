@@ -3,6 +3,11 @@ package com.example.projectmanagerapp.viewmodels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import com.example.projectmanagerapp.DueDateNotificationWorker
 import com.example.projectmanagerapp.repositories.MainFeaturesRepository
 import com.example.projectmanagerapp.ui.main.Card
 import com.example.projectmanagerapp.ui.main.Checklist
@@ -17,6 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 
 sealed class NavigationEvent {
     object NavigationBack: NavigationEvent()
@@ -38,7 +44,8 @@ class CardDetailViewModel(
     private val repository: MainFeaturesRepository,
     private val boardId: String,
     private val listId: String,
-    private val cardId: String
+    private val cardId: String,
+    private val workManager: WorkManager
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CardDetailUIState())
     val uiState: StateFlow<CardDetailUIState> = _uiState.asStateFlow()
@@ -156,6 +163,12 @@ class CardDetailViewModel(
             try {
                 val card = _uiState.value.card?.copy(dueDate = timestamp)
                 if (card != null) {
+                    if(card.dueDate != null) {
+                        scheduleDueDateNotification(card.dueDate)
+                    } else {
+                        cancelDueDateNotification()
+                    }
+
                     repository.updateCard(card)
                 } else {
                     _uiState.value = _uiState.value.copy(error = "Card is null", isLoading = false)
@@ -303,5 +316,35 @@ class CardDetailViewModel(
                 _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
             }
         }
+    }
+
+    private fun scheduleDueDateNotification(dueDateTimeStamp: Long) {
+        val card = _uiState.value.card ?: return
+
+        val currentTimeMillis = System.currentTimeMillis()
+        val delay = currentTimeMillis - dueDateTimeStamp
+
+        if(delay > 0) {
+            val inputData = Data.Builder()
+                .putString(DueDateNotificationWorker.CARD_ID_KEY, cardId)
+                .putString(DueDateNotificationWorker.CARD_TITLE_KEY, card.title)
+                .putInt(DueDateNotificationWorker.NOTIFICATION_ID_KEY, cardId.hashCode())
+                .build()
+
+            val workRequest = OneTimeWorkRequestBuilder<DueDateNotificationWorker>()
+                .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+                .setInputData(inputData)
+                .build()
+
+            val uniqueWorkName = "dueDateNotification_${cardId}"
+
+            workManager.enqueueUniqueWork(uniqueWorkName, ExistingWorkPolicy.REPLACE, workRequest)
+        }
+    }
+
+    private fun cancelDueDateNotification() {
+        val cardId = _uiState.value.card?.id ?: return
+        val uniqueWorkName = "dueDateNotification_${cardId}"
+        workManager.cancelUniqueWork(uniqueWorkName)
     }
 }

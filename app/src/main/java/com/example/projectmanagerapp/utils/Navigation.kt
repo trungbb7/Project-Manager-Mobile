@@ -14,6 +14,7 @@ import com.example.projectmanagerapp.MainActivity
 import com.example.projectmanagerapp.ui.auth.AuthViewModel
 import com.example.projectmanagerapp.ui.auth.ForgotPasswordScreen
 import androidx.navigation.navArgument
+import androidx.work.WorkManager
 import com.example.projectmanagerapp.ui.auth.LoginScreen
 import com.example.projectmanagerapp.ui.auth.RegisterScreen
 import com.example.projectmanagerapp.viewmodels.BoardViewModel
@@ -220,8 +221,11 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             val listId = backStackEntry.arguments?.getString("listId")
             val cardId = backStackEntry.arguments?.getString("cardId")
             val repository = MainFeaturesRepositoryImplement()
+
+            val workManager = WorkManager.getInstance(context)
+
             val viewModel: CardDetailViewModel =
-                viewModel(factory = CardDetailViewModelFactory(repository, boardId!!, listId!!, cardId!!))
+                viewModel(factory = CardDetailViewModelFactory(repository, boardId!!, listId!!, cardId!!, workManager))
             CardDetailScreen(
                 viewModel = viewModel,
                 onNavigateBack = {

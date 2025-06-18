@@ -2,6 +2,7 @@ package com.example.projectmanagerapp.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.work.WorkManager
 import com.example.projectmanagerapp.repositories.MainFeaturesRepository
 
 class BoardViewModelFactory(
@@ -53,10 +54,11 @@ class CardDetailViewModelFactory(
     private val mainFeaturesRepository: MainFeaturesRepository,
     private val boardId: String,
     private val listId: String,
-    private val cardId: String
+    private val cardId: String,
+    private val workManager: WorkManager
 ): ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return CardDetailViewModel(mainFeaturesRepository, boardId, listId, cardId) as T
+        return CardDetailViewModel(mainFeaturesRepository, boardId, listId, cardId, workManager) as T
     }
 }
 
