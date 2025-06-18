@@ -86,7 +86,8 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
                     navController.navigate(AppDestinations.LOGIN_ROUTE) {
                         popUpTo(AppDestinations.HOME_ROUTE) { inclusive = true }
                     }
-                })
+                }
+            )
         }
         composable(AppDestinations.LOGIN_ROUTE) {
             LoginScreen(
