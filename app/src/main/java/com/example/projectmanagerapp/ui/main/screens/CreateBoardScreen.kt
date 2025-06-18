@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -21,18 +22,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import androidx.core.graphics.toColorInt
+import coil.request.ImageRequest
 import com.example.projectmanagerapp.R
+import com.example.projectmanagerapp.ui.main.UnsplashPhoto
 import com.example.projectmanagerapp.viewmodels.CreateBoardViewModel
 import com.example.projectmanagerapp.utils.BackgroundType
 import com.example.projectmanagerapp.utils.Constants
-
-
 
 
 
@@ -101,9 +103,9 @@ fun CreateBoardScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     val selectedUri = uiState.selectedImageUri
-                    if (backgroundType == BackgroundType.IMAGE && selectedUri != null) {
+                    if (backgroundType == BackgroundType.IMAGE) {
                         AsyncImage(
-                            model = selectedUri,
+                            model = selectedUri ?: uiState.selectedImageUrl,
                             contentDescription = "Ảnh nền xem trước",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
@@ -178,6 +180,27 @@ fun CreateBoardScreen(
                 }
 
                 BackgroundType.IMAGE -> {
+
+                    Text("Chọn ảnh nền:", style = MaterialTheme.typography.titleSmall)
+                            Spacer(modifier = Modifier.height(8.dp))
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+                    ) {
+                        items(uiState.backgroundImageUrls) { photo ->
+                            ImagePickerItem(
+                                photo = photo,
+//                                isSelected = selectedBackgroundImage?.id == imageOption.id && backgroundType == BackgroundType.IMAGE,
+                                isSelected = uiState.selectedImageUrl == photo.urls.regular,
+                                onClick = {
+                                    viewModel.onBackgroundUrlSelected(photo.urls.regular)
+//                                    selectedBackgroundImage = imageOption
+//                                    backgroundType = BackgroundType.IMAGE
+                                }
+                            )
+                        }
+                    }
+
                     // --- Nút chọn ảnh ---
                     Button(
                         onClick = {
@@ -192,6 +215,8 @@ fun CreateBoardScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Chọn ảnh nền từ thư viện")
                     }
+
+
                 }
             }
 
@@ -239,3 +264,34 @@ fun ColorPickerItem(
             )
     )
 }
+
+
+
+@Composable
+fun ImagePickerItem(
+    photo: UnsplashPhoto,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .size(width = 80.dp, height = 60.dp)
+            .clickable(onClick = onClick)
+            .then(
+                if (isSelected) Modifier.border(3.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp)) else Modifier
+            ),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(photo.urls.regular)
+                .crossfade(true)
+                .build(),
+            contentDescription = "Tùy chọn ảnh nền",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+}
+
+
