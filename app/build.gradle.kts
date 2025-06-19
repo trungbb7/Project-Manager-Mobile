@@ -65,6 +65,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-storage")
+    implementation("com.google.firebase:firebase-ai")
     implementation("androidx.compose.material3:material3:1.3.2")
     implementation("androidx.compose.material3:material3-window-size-class:1.3.2")
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.4.0-alpha15")
@@ -117,4 +118,8 @@ dependencies {
 //    Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    implementation("com.google.code.gson:gson:2.11.0")
+
+    implementation("androidx.compose.material:material-icons-extended-android:1.6.8")
 }

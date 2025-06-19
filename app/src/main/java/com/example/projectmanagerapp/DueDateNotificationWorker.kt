@@ -21,7 +21,6 @@ class DueDateNotificationWorker(private val context: Context, private val worker
     }
 
     override suspend fun doWork(): Result {
-        TODO("Not yet implemented")
         val cardTitle = inputData.getString(CARD_TITLE_KEY) ?: "Unknown"
         val cardId = inputData.getString(CARD_ID_KEY) ?: "Unknown"
         val notificationId = inputData.getInt(NOTIFICATION_ID_KEY, cardId.hashCode())

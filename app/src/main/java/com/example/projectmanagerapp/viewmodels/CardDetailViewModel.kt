@@ -14,6 +14,13 @@ import com.example.projectmanagerapp.ui.main.Checklist
 import com.example.projectmanagerapp.ui.main.ChecklistItem
 import com.example.projectmanagerapp.ui.main.Comment
 import com.example.projectmanagerapp.ui.main.User
+import com.example.projectmanagerapp.ui.main.response_models.CheckListResponseModel
+import com.google.firebase.Firebase
+import com.google.firebase.ai.ai
+import com.google.firebase.ai.type.GenerativeBackend
+import com.google.firebase.ai.type.Schema
+import com.google.firebase.ai.type.generationConfig
+import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -55,6 +62,43 @@ class CardDetailViewModel(
 
     init {
         fetchData()
+    }
+
+    fun generateCheckList() {
+        _uiState.value = _uiState.value.copy(isLoading = true)
+        viewModelScope.launch {
+            val jsonSchema = Schema.obj(
+                mapOf(
+                    "checkListTitle" to Schema.string(description = "check list title"),
+                    "checkListItems" to Schema.array(
+                        items = Schema.string(description = "check list item")
+                    )
+                )
+            )
+
+            val model = Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(
+                modelName = "gemini-2.5-flash",
+                generationConfig = generationConfig {
+                    responseMimeType = "application/json"
+                    responseSchema = jsonSchema
+                }
+            )
+
+            val cardName = _uiState.value.card?.title ?: ""
+            val cardDescription = _uiState.value.card?.description ?: ""
+
+
+            val prompt = "Tạo check list cho thẻ có tiêu đề là \"${cardName}\" và mô tả \"${cardDescription}\" gồm tên và danh sách check list item." +
+                    "Lưu ý: tên của check list item ngắn, tối đa 30 ký tự"
+            val response = model.generateContent(prompt)
+
+            val checkListResponseModel = Gson().fromJson(response.text, CheckListResponseModel::class.java)
+            if(checkListResponseModel.checkListTitle.isBlank() || checkListResponseModel.checkListItems.isEmpty()) {
+                _uiState.value = _uiState.value.copy(error = "Tạo check list thất bại", isLoading = false)
+                return@launch
+            }
+            addCheckList(checkListResponseModel.checkListTitle, checkListResponseModel.checkListItems)
+        }
     }
 
     fun fetchData() {
@@ -192,6 +236,20 @@ class CardDetailViewModel(
         }
     }
 
+    fun addCheckList(checkListTitle: String, checkListItems: List<String>) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                val checklist = Checklist(title = checkListTitle, cardId = cardId)
+                checklist.items = checkListItems.map { ChecklistItem(text = it) }
+                repository.addCheckList(checklist)
+                _uiState.value = _uiState.value.copy(isLoading = false)
+            }catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
+            }
+        }
+    }
+
     fun updateCheckListTitle(newTitle: String, checklistId: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
@@ -236,6 +294,7 @@ class CardDetailViewModel(
             }
         }
     }
+
 
     fun updateCheckListItem(checklistId: String, itemId: String, newText: String, isChecked: Boolean) {
         viewModelScope.launch {
@@ -321,9 +380,12 @@ class CardDetailViewModel(
     private fun scheduleDueDateNotification(dueDateTimeStamp: Long) {
         val card = _uiState.value.card ?: return
 
-        val currentTimeMillis = System.currentTimeMillis()
-        val delay = currentTimeMillis - dueDateTimeStamp
+        Log.d("CardDetailViewModel", "scheduleDueDateNotification: $dueDateTimeStamp")
 
+        val currentTimeMillis = System.currentTimeMillis()
+        val delay = dueDateTimeStamp - currentTimeMillis
+
+        Log.d("CardDetailViewModel", "scheduleDueDateNotification delay: $delay")
         if(delay > 0) {
             val inputData = Data.Builder()
                 .putString(DueDateNotificationWorker.CARD_ID_KEY, cardId)
@@ -337,7 +399,7 @@ class CardDetailViewModel(
                 .build()
 
             val uniqueWorkName = "dueDateNotification_${cardId}"
-
+            Log.d("CardDetailViewModel", "scheduleDueDateNotification: $uniqueWorkName - delay: $delay" )
             workManager.enqueueUniqueWork(uniqueWorkName, ExistingWorkPolicy.REPLACE, workRequest)
         }
     }

@@ -10,7 +10,7 @@ object Utils {
 
     fun formatDueDate(dateLong: Long?): String {
         if (dateLong == null) return "Chưa đặt"
-        val sdf = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault())
+        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
         return sdf.format(Date(dateLong))
     }
     fun formatCommentTimestamp(dateLong: Long): String {

@@ -1,11 +1,27 @@
 package com.example.projectmanagerapp.ui.main.screens
 
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -28,19 +44,55 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -49,6 +101,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.projectmanagerapp.R
 import com.example.projectmanagerapp.ui.main.Checklist
 import com.example.projectmanagerapp.ui.main.ChecklistItem
 import com.example.projectmanagerapp.ui.main.Comment
@@ -58,25 +111,30 @@ import com.example.projectmanagerapp.viewmodels.CardDetailViewModel
 import com.example.projectmanagerapp.viewmodels.NavigationEvent
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import com.example.projectmanagerapp.R
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CardDetailScreen(
     viewModel: CardDetailViewModel,
     onNavigateBack: () -> Unit,
 
-) {
+    ) {
 
     val uiState by viewModel.uiState.collectAsState()
     val boardName = uiState.boardName
     val listName = uiState.listName
     val card = uiState.card
-    if(card == null){
+    if (card == null) {
         Log.d("CardDetailScreen", "Card is null")
         return
-    }else {
+    } else {
         Log.d("CardDetailScreen", "Card: $card")
     }
     val comments = uiState.comments
@@ -86,14 +144,13 @@ fun CardDetailScreen(
 
     LaunchedEffect(key1 = true) {
         viewModel.navigationEvent.collectLatest { event ->
-            when(event) {
+            when (event) {
                 NavigationEvent.NavigationBack -> {
                     onNavigateBack()
                 }
             }
         }
     }
-
 
 
     var editingTitle by remember { mutableStateOf(false) }
@@ -113,7 +170,19 @@ fun CardDetailScreen(
     var showAssignMemberDialog by remember { mutableStateOf(false) }
 
     // --- State cho DatePickerDialog ---
-    var showDatePickerDialog by remember { mutableStateOf(false) }
+    var selectedDate by remember { mutableStateOf<LocalDate?>(LocalDate.now()) }
+    var selectedTime by remember { mutableStateOf<LocalTime?>(LocalTime.now()) }
+    var selectedEpochMilli by remember { mutableStateOf<Long?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    val timePickerState = rememberTimePickerState(
+        initialHour = LocalTime.now().hour,
+        initialMinute = LocalTime.now().minute,
+        is24Hour = true
+    )
+
+//    var showDatePickerDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(error) {
         if (error != null) {
@@ -129,38 +198,75 @@ fun CardDetailScreen(
     }
 
 
-    if (showDatePickerDialog) {
+    if (showDatePicker) {
+
         val datePickerState = rememberDatePickerState(
             initialSelectedDateMillis = card.dueDate,
             initialDisplayedMonthMillis = card.dueDate ?: System.currentTimeMillis()
         )
-
         DatePickerDialog(
-            onDismissRequest = { showDatePickerDialog = false },
+            onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.setDueDate(datePickerState.selectedDateMillis)
-                        showDatePickerDialog = false
+//                        viewModel.setDueDate(datePickerState.selectedDateMillis)
+//                        showDatePicker = false
+                        val selectedMillis = datePickerState.selectedDateMillis
+                        if (selectedMillis != null) {
+                            selectedDate = Instant.ofEpochMilli(selectedMillis)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                        }
+                        showDatePicker = false
+                        showTimePicker = true
                     }
                 ) { Text("Chọn") }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePickerDialog = false }) { Text("Hủy") }
+                TextButton(onClick = { showDatePicker = false }) { Text("Hủy") }
             }
         ) {
             DatePicker(state = datePickerState)
         }
     }
 
-    if(showAssignMemberDialog) {
+    if (showTimePicker) {
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            modifier = Modifier.fillMaxWidth(),
+            title = { Text("Chọn giờ") },
+            text = { Box(contentAlignment = Alignment.Center) { TimePicker(state = timePickerState) } },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        selectedTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
+                        showTimePicker = false
+
+                        if (selectedDate != null && selectedTime != null) {
+                            val localDateTime = LocalDateTime.of(selectedDate!!, selectedTime!!)
+
+                            val zonedDateTime = localDateTime.atZone(ZoneId.systemDefault())
+
+                            val epochMilli = zonedDateTime.toInstant().toEpochMilli()
+
+                            selectedEpochMilli = epochMilli
+                            viewModel.setDueDate(selectedEpochMilli)
+                        }
+                    }
+                ) { Text("OK") }
+            },
+            dismissButton = { TextButton(onClick = { showTimePicker = false }) { Text("Cancel") } }
+        )
+    }
+
+    if (showAssignMemberDialog) {
         AssignMemberDialog(
             boardMembers = uiState.boardMembers,
             assignedMemberIds = uiState.card!!.assignedMemberIds,
-            onAssign = {userId ->
+            onAssign = { userId ->
                 viewModel.assignMember(userId)
             },
-            onUnassign = {userId ->
+            onUnassign = { userId ->
                 viewModel.unAssignMember(userId)
             },
             onDismiss = {
@@ -268,27 +374,31 @@ fun CardDetailScreen(
                 CardDetailSection(icon = Icons.Filled.Person, title = "Thành viên") {
                     val assignedMembers = uiState.assignedMembers
 
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            assignedMembers.forEach { member ->
-                                AsyncImage(
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data(member.photoUrl)
-                                        .crossfade(true)
-                                         .placeholder(R.drawable.user_image_placeholder) // Ảnh chờ
-                                         .error(R.drawable.user_image_placeholder) // Ảnh lỗi
-                                        .build(),
-                                    contentDescription = "Ảnh đại diện",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.size(36.dp)
-                                        .clip(CircleShape)
-                                        .border(BorderStroke(2.dp, MaterialTheme.colorScheme.surface), CircleShape)
-                                )
-                            }
-
-                            IconButton(onClick = { showAssignMemberDialog = true }) {
-                                Icon(Icons.Filled.AddCircle, "Gán thành viên")
-                            }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        assignedMembers.forEach { member ->
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(member.photoUrl)
+                                    .crossfade(true)
+                                    .placeholder(R.drawable.user_image_placeholder) // Ảnh chờ
+                                    .error(R.drawable.user_image_placeholder) // Ảnh lỗi
+                                    .build(),
+                                contentDescription = "Ảnh đại diện",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .border(
+                                        BorderStroke(2.dp, MaterialTheme.colorScheme.surface),
+                                        CircleShape
+                                    )
+                            )
                         }
+
+                        IconButton(onClick = { showAssignMemberDialog = true }) {
+                            Icon(Icons.Filled.AddCircle, "Gán thành viên")
+                        }
+                    }
                 }
             }
 
@@ -318,7 +428,9 @@ fun CardDetailScreen(
                             value = currentDescription,
                             onValueChange = { currentDescription = it },
                             label = { Text("Thêm mô tả chi tiết...") },
-                            modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = 100.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .defaultMinSize(minHeight = 100.dp),
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 capitalization = KeyboardCapitalization.Sentences,
                                 imeAction = ImeAction.Done
@@ -333,7 +445,10 @@ fun CardDetailScreen(
                             })
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            horizontalArrangement = Arrangement.End,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             TextButton(onClick = {
                                 currentDescription = card.description ?: ""
                                 editingDescription = false
@@ -364,19 +479,28 @@ fun CardDetailScreen(
 
             item {
                 CardDetailSection(icon = Icons.Filled.DateRange, title = "Ngày hết hạn") {
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text(
                             Utils.formatDueDate(card.dueDate),
                             style = MaterialTheme.typography.bodyLarge,
-                            color = if (card.dueDate != null && (card.dueDate ?: 0) < System.currentTimeMillis()) MaterialTheme.colorScheme.error else LocalContentColor.current,
+                            color = if (card.dueDate != null && (card.dueDate
+                                    ?: 0) < System.currentTimeMillis()
+                            ) MaterialTheme.colorScheme.error else LocalContentColor.current,
                             modifier = Modifier.weight(1f)
                         )
-                        TextButton(onClick = { showDatePickerDialog = true }) {
+                        TextButton(onClick = { showDatePicker = true }) {
                             Text(if (card.dueDate == null) "THÊM" else "THAY ĐỔI")
                         }
                         if (card.dueDate != null) {
                             IconButton(onClick = { viewModel.setDueDate(null) }) {
-                                Icon(Icons.Filled.Close, "Xóa ngày hết hạn", tint = MaterialTheme.colorScheme.error)
+                                Icon(
+                                    Icons.Filled.Close,
+                                    "Xóa ngày hết hạn",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
                             }
                         }
                     }
@@ -385,10 +509,23 @@ fun CardDetailScreen(
 
             item {
                 CardDetailSection(icon = Icons.Filled.CheckCircle, title = "Checklist") {
-                    Button(onClick = { showAddChecklistDialog = true }, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.Filled.Add, contentDescription = "Thêm checklist")
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Thêm Checklist")
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Button(
+                            onClick = { showAddChecklistDialog = true },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Filled.Add, contentDescription = "Thêm checklist")
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Thêm Checklist")
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+                        AiButton(onClick = {
+                            viewModel.generateCheckList()
+                        })
                     }
                 }
             }
@@ -397,14 +534,18 @@ fun CardDetailScreen(
                     ChecklistSectionView(
                         checklist = checklist,
                         onUpdateTitle = { newTitle ->
-                            viewModel.updateCheckListTitle(newTitle, checklist.id) },
+                            viewModel.updateCheckListTitle(newTitle, checklist.id)
+                        },
                         onDelete = { viewModel.deleteCheckList(checklist.id) },
                         onAddItem = { itemText ->
-                            viewModel.addCheckListItem(checklist.id, itemText) },
+                            viewModel.addCheckListItem(checklist.id, itemText)
+                        },
                         onUpdateItem = { itemId, newText, isChecked ->
-                            viewModel.updateCheckListItem(checklist.id, itemId, newText, isChecked) },
+                            viewModel.updateCheckListItem(checklist.id, itemId, newText, isChecked)
+                        },
                         onDeleteItem = { itemId ->
-                            viewModel.deleteCheckListItem(checklist.id, itemId) }
+                            viewModel.deleteCheckListItem(checklist.id, itemId)
+                        }
                     )
                 }
             }
@@ -433,7 +574,9 @@ fun CardDetailScreen(
                     )
                 }
             }
-            items(comments.sortedByDescending { it.timestamp }, key = { "comment_${it.id}" }) { comment ->
+            items(
+                comments.sortedByDescending { it.timestamp },
+                key = { "comment_${it.id}" }) { comment ->
                 CommentItemView(comment)
             }
 
@@ -483,9 +626,18 @@ fun CardDetailSection(
 ) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, contentDescription = title, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+            Icon(
+                icon,
+                contentDescription = title,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(
+                title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
         }
         Spacer(modifier = Modifier.height(8.dp))
         Column(modifier = Modifier.padding(start = 28.dp), content = content)
@@ -502,9 +654,19 @@ fun CardDetailEditableSection(
 ) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            Icon(icon, contentDescription = title, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+            Icon(
+                icon,
+                contentDescription = title,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            Text(
+                title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.weight(1f)
+            )
             if (!isEditing) { // Chỉ hiển thị nút sửa khi không ở chế độ sửa
                 TextButton(onClick = onEditToggle) {
                     Text("SỬA")
@@ -512,7 +674,10 @@ fun CardDetailEditableSection(
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Column(modifier = Modifier.padding(start = if(isEditing) 0.dp else 28.dp), content = content)
+        Column(
+            modifier = Modifier.padding(start = if (isEditing) 0.dp else 28.dp),
+            content = content
+        )
     }
 }
 
@@ -564,19 +729,31 @@ fun ChecklistSectionView(
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         keyboardActions = KeyboardActions(onDone = {
-                            if(currentChecklistTitle.isNotBlank()) onUpdateTitle(currentChecklistTitle)
+                            if (currentChecklistTitle.isNotBlank()) onUpdateTitle(
+                                currentChecklistTitle
+                            )
                             editingChecklistTitle = false
                         })
                     )
                     IconButton(onClick = {
-                        if(currentChecklistTitle.isNotBlank()) onUpdateTitle(currentChecklistTitle)
+                        if (currentChecklistTitle.isNotBlank()) onUpdateTitle(currentChecklistTitle)
                         editingChecklistTitle = false
                     }) { Icon(Icons.Filled.Edit, "Lưu tiêu đề checklist") }
                 } else {
-                    Text(checklist.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f).clickable { editingChecklistTitle = true })
+                    Text(
+                        checklist.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { editingChecklistTitle = true })
                 }
                 IconButton(onClick = onDelete, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Filled.Delete, "Xóa checklist", tint = MaterialTheme.colorScheme.error)
+                    Icon(
+                        Icons.Filled.Delete,
+                        "Xóa checklist",
+                        tint = MaterialTheme.colorScheme.error
+                    )
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -587,10 +764,16 @@ fun ChecklistSectionView(
             if (totalItems > 0) {
                 LinearProgressIndicator(
                     progress = { checkedItems.toFloat() / totalItems.toFloat() },
-                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp))
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp))
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text("$checkedItems/$totalItems hoàn thành", style = MaterialTheme.typography.labelSmall)
+                Text(
+                    "$checkedItems/$totalItems hoàn thành",
+                    style = MaterialTheme.typography.labelSmall
+                )
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -660,7 +843,9 @@ fun ChecklistItemView(
             OutlinedTextField(
                 value = currentItemText,
                 onValueChange = { currentItemText = it },
-                modifier = Modifier.weight(1f).focusRequester(focusRequester),
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequester),
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodyMedium,
                 keyboardActions = KeyboardActions(onDone = {
@@ -680,13 +865,20 @@ fun ChecklistItemView(
         }
         Spacer(modifier = Modifier.width(8.dp))
         if (editingItemText) {
-            IconButton(onClick = {
-                if (currentItemText.isNotBlank()) onUpdate(currentItemText, item.isChecked)
-                editingItemText = !editingItemText },
-                modifier = Modifier.size(24.dp)) {
-                Icon(Icons.Filled.Check, "Lưu mục", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            IconButton(
+                onClick = {
+                    if (currentItemText.isNotBlank()) onUpdate(currentItemText, item.isChecked)
+                    editingItemText = !editingItemText
+                },
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    Icons.Filled.Check,
+                    "Lưu mục",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-        }else {
+        } else {
 
             IconButton(
                 onClick = {
@@ -712,11 +904,19 @@ fun CommentItemView(comment: Comment) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(1.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
+                alpha = 0.5f
+            )
+        )
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(comment.authorName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                Text(
+                    comment.authorName,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(comment.timestamp.toString(), style = MaterialTheme.typography.labelSmall)
             }
@@ -725,9 +925,6 @@ fun CommentItemView(comment: Comment) {
         }
     }
 }
-
-
-
 
 
 @Composable
@@ -745,13 +942,15 @@ fun AssignMemberDialog(
             LazyColumn {
                 items(boardMembers) { member ->
                     Row(
-                        modifier = Modifier.fillMaxWidth().clickable {
-                            if (assignedMemberIds.contains(member.uid)) {
-                                onUnassign(member.uid)
-                            } else {
-                                onAssign(member.uid)
-                            }
-                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                if (assignedMemberIds.contains(member.uid)) {
+                                    onUnassign(member.uid)
+                                } else {
+                                    onAssign(member.uid)
+                                }
+                            },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(
@@ -767,3 +966,50 @@ fun AssignMemberDialog(
     )
 }
 
+
+@Composable
+fun AiButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val aiGradient = Brush.horizontalGradient(
+        colors = listOf(
+            Color(0xFF8E2DE2),
+            Color(0xFF4A00E0)
+        )
+    )
+
+    Button(
+        onClick = onClick,
+        modifier = modifier
+            .size(height = 40.dp, width = 100.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Transparent
+        ),
+        contentPadding = PaddingValues()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(aiGradient),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.AutoAwesome,
+                    contentDescription = "AI Icon",
+                    tint = Color.White
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Gợi ý",
+                    color = Color.White
+                )
+            }
+        }
+    }
+}
