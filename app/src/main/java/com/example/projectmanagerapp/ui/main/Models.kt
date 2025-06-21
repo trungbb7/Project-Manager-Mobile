@@ -1,7 +1,9 @@
 package com.example.projectmanagerapp.ui.main
 
+import android.os.Parcelable
 import com.google.firebase.firestore.DocumentId
 import com.google.firebase.firestore.ServerTimestamp
+import kotlinx.parcelize.Parcelize
 import java.util.Date
 import java.util.UUID
 
@@ -19,9 +21,18 @@ data class Card(
     val title: String = "",
     val description: String? = null,
     val dueDate: Long? = null,
+    val location: CardLocation? = null,
     val assignedMemberIds: List<String> = emptyList(),
     val createdAt: Long = System.currentTimeMillis()
 )
+
+@Parcelize
+data class CardLocation(
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+    val address: String = "",
+    val placeName: String? = null
+): Parcelable
 
 data class PMList(
     @DocumentId val id: String = "",

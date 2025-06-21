@@ -1,3 +1,14 @@
+import java.util.Properties
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if(localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use {
+        localProperties.load(it)
+    }
+}
+
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,7 +16,10 @@ plugins {
     id("com.google.gms.google-services")
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
+    id("kotlin-parcelize")
 }
+
+
 
 android {
     namespace = "com.example.projectmanagerapp"
@@ -19,6 +33,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val mapApikey = localProperties.getProperty("MAPS_API_KEY")
+
+        manifestPlaceholders["mapsApiKey"] = mapApikey ?: ""
+        buildConfigField("String", "MAPS_API_KEY", "\"$mapApikey\"")
+
+        val upsplashApiKey = localProperties.getProperty("UNSPLASH_ACCESS_KEY")
+        buildConfigField("String", "UNSPLASH_ACCESS_KEY", "\"$upsplashApiKey\"")
     }
 
     buildTypes {
@@ -39,6 +61,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -48,6 +71,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-storage")
+    implementation("com.google.firebase:firebase-ai")
     implementation("androidx.compose.material3:material3:1.3.2")
     implementation("androidx.compose.material3:material3-window-size-class:1.3.2")
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.4.0-alpha15")
@@ -67,7 +91,8 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
     // Image loading
-    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)
@@ -88,8 +113,26 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     implementation("androidx.compose.material:material:1.9.0-alpha04")
-    implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.1")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.1")
+
+
+
+//     Kotlin + Coroutines
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+//    Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    implementation("com.google.code.gson:gson:2.11.0")
+
+    implementation("androidx.compose.material:material-icons-extended-android:1.6.8")
+
+    // Google Maps
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    // Places API Client
+    implementation("com.google.android.libraries.places:places:3.4.0")
+    // Thư viện Maps dành cho Jetpack Compose
+    implementation("com.google.maps.android:maps-compose:4.3.3")
 }

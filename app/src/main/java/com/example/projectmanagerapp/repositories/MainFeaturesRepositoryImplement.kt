@@ -3,11 +3,15 @@ package com.example.projectmanagerapp.repositories
 import android.net.Uri
 import android.util.Log
 import androidx.compose.ui.unit.Constraints
+import com.example.projectmanagerapp.BuildConfig
 import com.example.projectmanagerapp.ui.main.Board
 import com.example.projectmanagerapp.ui.main.Card
+import com.example.projectmanagerapp.ui.main.CardLocation
 import com.example.projectmanagerapp.ui.main.Checklist
 import com.example.projectmanagerapp.ui.main.Comment
 import com.example.projectmanagerapp.ui.main.PMList
+import com.example.projectmanagerapp.ui.main.UnsplashPhoto
+import com.example.projectmanagerapp.ui.main.UpsplashAPIService
 import com.example.projectmanagerapp.ui.main.User
 import com.example.projectmanagerapp.utils.Constants
 import com.google.firebase.auth.FirebaseAuth
@@ -18,12 +22,21 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.UUID
 
 class MainFeaturesRepositoryImplement: MainFeaturesRepository {
     private val firestore = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance()
     private val auth = FirebaseAuth.getInstance()
+
+    private val upsplashApi: UpsplashAPIService = Retrofit.Builder()
+        .baseUrl("https://api.unsplash.com/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+        .create(UpsplashAPIService::class.java)
+
     override suspend fun getCurrentUser(): User? {
         val uid = auth.currentUser?.uid
         if (uid == null) return null
@@ -316,4 +329,18 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
         firestore.collection(Constants.CARD_COLLECTION).document(cardId)
             .update("assignedMemberIds", FieldValue.arrayRemove(userId)).await()
     }
+
+    override suspend fun getRandomBackgroundImages(): List<UnsplashPhoto> {
+        val upsplashAccessKey = BuildConfig.UNSPLASH_ACCESS_KEY
+        return upsplashApi.getRandomPhotos(upsplashAccessKey)
+    }
+
+    override suspend fun updateCardLocation(
+        cardId: String,
+        location: CardLocation?
+    ) {
+        firestore.collection(Constants.CARD_COLLECTION).document(cardId).update("location", location).await()
+    }
+
+
 }

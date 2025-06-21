@@ -1,8 +1,11 @@
 package com.example.projectmanagerapp.viewmodels
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.work.WorkManager
 import com.example.projectmanagerapp.repositories.MainFeaturesRepository
+import com.google.android.libraries.places.api.net.PlacesClient
 
 class BoardViewModelFactory(
     private val mainFeaturesRepository: MainFeaturesRepository
@@ -53,10 +56,11 @@ class CardDetailViewModelFactory(
     private val mainFeaturesRepository: MainFeaturesRepository,
     private val boardId: String,
     private val listId: String,
-    private val cardId: String
+    private val cardId: String,
+    private val workManager: WorkManager
 ): ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return CardDetailViewModel(mainFeaturesRepository, boardId, listId, cardId) as T
+        return CardDetailViewModel(mainFeaturesRepository, boardId, listId, cardId, workManager) as T
     }
 }
 
@@ -65,5 +69,14 @@ class HomeViewModelFactory(
 ): ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return HomeViewModel(mainFeaturesRepository) as T
+    }
+}
+
+class MapPickerViewModelFactory(
+    private val context: Context,
+    private val placesClient: PlacesClient
+): ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return MapPickerViewModel(context, placesClient) as T
     }
 }

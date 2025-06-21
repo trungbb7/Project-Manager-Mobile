@@ -7,6 +7,7 @@ object AppDestinations {
     const val EDIT_BOARD_ROUTE = "edit_board/{boardId}"
     const val BOARD_DETAIL_ROUTE = "board_detail{boardId}"
     const val CARD_DETAIL_ROUTE = "card_detail/{boardId}/{listId}/{cardId}"
+    const val MAP_PICKER_ROUTE = "map_picker"
     const val ADD_MEMBER_ROUTE = "add_member/{boardId}"
     const val LOGIN_ROUTE = "login"
     const val REGISTER_ROUTE = "register"
