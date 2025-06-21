@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
@@ -99,13 +100,16 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.projectmanagerapp.R
+import com.example.projectmanagerapp.ui.main.CardLocation
 import com.example.projectmanagerapp.ui.main.Checklist
 import com.example.projectmanagerapp.ui.main.ChecklistItem
 import com.example.projectmanagerapp.ui.main.Comment
 import com.example.projectmanagerapp.ui.main.User
+import com.example.projectmanagerapp.utils.AppDestinations
 import com.example.projectmanagerapp.utils.Utils
 import com.example.projectmanagerapp.viewmodels.CardDetailViewModel
 import com.example.projectmanagerapp.viewmodels.NavigationEvent
@@ -123,6 +127,7 @@ import java.time.ZoneId
 @Composable
 fun CardDetailScreen(
     viewModel: CardDetailViewModel,
+    navController: NavController,
     onNavigateBack: () -> Unit,
 
     ) {
@@ -141,6 +146,20 @@ fun CardDetailScreen(
     val checklists = uiState.checklists
     val isLoading = uiState.isLoading
     val error = uiState.error
+
+
+
+
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+    LaunchedEffect(savedStateHandle) {
+        savedStateHandle?.getLiveData<CardLocation>("picked_location")?.observeForever { location ->
+            // Khi có kết quả, gọi ViewModel để lưu
+            viewModel.updateCardLocation(location)
+            // Xóa kết quả khỏi state handle để không bị gọi lại
+            savedStateHandle.remove<CardLocation>("picked_location")
+        }
+    }
+
 
     LaunchedEffect(key1 = true) {
         viewModel.navigationEvent.collectLatest { event ->
@@ -501,6 +520,42 @@ fun CardDetailScreen(
                                     "Xóa ngày hết hạn",
                                     tint = MaterialTheme.colorScheme.error
                                 )
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                CardDetailSection(icon = Icons.Default.LocationOn, title = "Vị trí") {
+                    val cardLocation = uiState.card?.location
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                // Điều hướng đến màn hình chọn vị trí
+//                                navController.navigate("map_picker/${card.id}")
+                                navController.navigate(AppDestinations.MAP_PICKER_ROUTE)
+                            }
+                    ) {
+                        if (cardLocation != null) {
+                            // Hiển thị vị trí đã chọn
+                            Text(
+                                cardLocation.placeName ?: "Vị trí đã chọn",
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(cardLocation.address, style = MaterialTheme.typography.bodyMedium)
+                            // Nút xóa vị trí
+                            TextButton(onClick = { viewModel.updateCardLocation(null) }) {
+                                Text("Xóa vị trí", color = MaterialTheme.colorScheme.error)
+                            }
+                        } else {
+                            // Hiển thị nút thêm vị trí
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Add, contentDescription = "Thêm vị trí")
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Thêm vị trí")
                             }
                         }
                     }

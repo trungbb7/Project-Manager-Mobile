@@ -6,6 +6,7 @@ import androidx.compose.ui.unit.Constraints
 import com.example.projectmanagerapp.BuildConfig
 import com.example.projectmanagerapp.ui.main.Board
 import com.example.projectmanagerapp.ui.main.Card
+import com.example.projectmanagerapp.ui.main.CardLocation
 import com.example.projectmanagerapp.ui.main.Checklist
 import com.example.projectmanagerapp.ui.main.Comment
 import com.example.projectmanagerapp.ui.main.PMList
@@ -332,6 +333,13 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
     override suspend fun getRandomBackgroundImages(): List<UnsplashPhoto> {
         val upsplashAccessKey = BuildConfig.UNSPLASH_ACCESS_KEY
         return upsplashApi.getRandomPhotos(upsplashAccessKey)
+    }
+
+    override suspend fun updateCardLocation(
+        cardId: String,
+        location: CardLocation?
+    ) {
+        firestore.collection(Constants.CARD_COLLECTION).document(cardId).update("location", location).await()
     }
 
 

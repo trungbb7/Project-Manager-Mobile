@@ -10,6 +10,7 @@ import androidx.work.WorkManager
 import com.example.projectmanagerapp.DueDateNotificationWorker
 import com.example.projectmanagerapp.repositories.MainFeaturesRepository
 import com.example.projectmanagerapp.ui.main.Card
+import com.example.projectmanagerapp.ui.main.CardLocation
 import com.example.projectmanagerapp.ui.main.Checklist
 import com.example.projectmanagerapp.ui.main.ChecklistItem
 import com.example.projectmanagerapp.ui.main.Comment
@@ -371,6 +372,21 @@ class CardDetailViewModel(
             try {
                 repository.deleteCard(cardId)
                 _navigationEvent.emit(NavigationEvent.NavigationBack)
+            }catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
+            }
+        }
+    }
+
+    fun updateCardLocation(newLocation: CardLocation?) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                val card = _uiState.value.card
+                if (card != null) {
+                    repository.updateCardLocation(card.id, newLocation)
+                }
+                _uiState.value = _uiState.value.copy(isLoading = false)
             }catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
             }

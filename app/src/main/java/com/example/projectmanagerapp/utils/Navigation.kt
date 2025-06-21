@@ -1,10 +1,12 @@
 package com.example.projectmanagerapp.utils
 
 import AddMemberScreen
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -26,6 +28,7 @@ import com.example.projectmanagerapp.ui.auth.Profile
 import com.example.projectmanagerapp.ui.main.screens.BoardDetailScreen
 import com.example.projectmanagerapp.ui.main.screens.CardDetailScreen
 import com.example.projectmanagerapp.ui.main.screens.EditBoardScreen
+import com.example.projectmanagerapp.ui.main.screens.MapPickerScreen
 import com.example.projectmanagerapp.viewmodels.AddMemberViewModel
 import com.example.projectmanagerapp.viewmodels.AddMemberViewModelFactory
 import com.example.projectmanagerapp.viewmodels.BoardDetailViewModel
@@ -38,8 +41,12 @@ import com.example.projectmanagerapp.viewmodels.EditBoardViewModel
 import com.example.projectmanagerapp.viewmodels.EditBoardViewModelFactory
 import com.example.projectmanagerapp.viewmodels.HomeViewModel
 import com.example.projectmanagerapp.viewmodels.HomeViewModelFactory
+import com.example.projectmanagerapp.viewmodels.MapPickerViewModel
+import com.example.projectmanagerapp.viewmodels.MapPickerViewModelFactory
+import com.google.android.libraries.places.api.Places
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavHost(navController: NavHostController, modifier: Modifier) {
     val authViewModel: AuthViewModel = viewModel()
@@ -229,9 +236,17 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
                 viewModel(factory = CardDetailViewModelFactory(repository, boardId!!, listId!!, cardId!!, workManager))
             CardDetailScreen(
                 viewModel = viewModel,
+                navController = navController,
                 onNavigateBack = {
                     navController.popBackStack()}
             )
+        }
+
+        composable(route = AppDestinations.MAP_PICKER_ROUTE) {
+            val placesClient = Places.createClient(context)
+            val viewModel: MapPickerViewModel =
+                viewModel(factory = MapPickerViewModelFactory(context, placesClient))
+            MapPickerScreen(navController = navController, viewModel = viewModel)
         }
 
         composable(

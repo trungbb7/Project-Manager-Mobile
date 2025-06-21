@@ -16,6 +16,7 @@ plugins {
     id("com.google.gms.google-services")
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
+    id("kotlin-parcelize")
 }
 
 
@@ -32,6 +33,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val mapApikey = localProperties.getProperty("MAPS_API_KEY")
+
+        manifestPlaceholders["mapsApiKey"] = mapApikey ?: ""
+        buildConfigField("String", "MAPS_API_KEY", "\"$mapApikey\"")
 
         val upsplashApiKey = localProperties.getProperty("UNSPLASH_ACCESS_KEY")
         buildConfigField("String", "UNSPLASH_ACCESS_KEY", "\"$upsplashApiKey\"")
@@ -122,4 +128,11 @@ dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
 
     implementation("androidx.compose.material:material-icons-extended-android:1.6.8")
+
+    // Google Maps
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    // Places API Client
+    implementation("com.google.android.libraries.places:places:3.4.0")
+    // Thư viện Maps dành cho Jetpack Compose
+    implementation("com.google.maps.android:maps-compose:4.3.3")
 }
