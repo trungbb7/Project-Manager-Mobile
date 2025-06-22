@@ -257,14 +257,19 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             )
         }
 
-        composable(route = AppDestinations.MAP_PICKER_ROUTE,
-            arguments = listOf(navArgument("latitude") {type = NavType.FloatType}, navArgument("longitude") {type = NavType.FloatType})) { backStackEntry ->
+        composable(
+            route = AppDestinations.MAP_PICKER_ROUTE,
+            arguments = listOf(
+                navArgument("latitude") { type = NavType.StringType },
+                navArgument("longitude") { type = NavType.StringType })
+        ) { backStackEntry ->
 
-            val latitude = backStackEntry.arguments?.getFloat("latitude")
-            val longitude = backStackEntry.arguments?.getFloat("longitude")
+            val latitude = backStackEntry.arguments?.getString("latitude")
+            val longitude = backStackEntry.arguments?.getString("longitude")
+
             Log.d("MapPickerScreen", "Latitude: $latitude, Longitude: $longitude")
             var lagLng: LatLng? = null
-            if(latitude != null && longitude != null) {
+            if (!latitude.isNullOrBlank() && !longitude.isNullOrBlank()) {
                 lagLng = LatLng(latitude.toDouble(), longitude.toDouble())
             }
 

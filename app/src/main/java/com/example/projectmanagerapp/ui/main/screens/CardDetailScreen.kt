@@ -575,7 +575,15 @@ fun CardDetailScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    navController.navigate(AppDestinations.MAP_PICKER_ROUTE.replace("{latitude}", cardLocation?.latitude.toString()).replace("{longitude}", cardLocation?.longitude.toString()))
+                                    navController.navigate(
+                                        AppDestinations.MAP_PICKER_ROUTE.replace(
+                                            "{latitude}",
+                                            if (cardLocation?.latitude != null) cardLocation.latitude.toString() else ""
+                                        ).replace(
+                                            "{longitude}",
+                                            if (cardLocation?.longitude != null) cardLocation.longitude.toString() else ""
+                                        )
+                                    )
                                 }
                         ) {
                             if (cardLocation != null) {

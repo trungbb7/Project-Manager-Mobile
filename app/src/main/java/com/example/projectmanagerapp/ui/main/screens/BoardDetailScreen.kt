@@ -125,9 +125,11 @@ fun BoardDetailScreen(
         containerColor = Color(board.backgroundColor.toColorInt())
     ) { paddingValues ->
 
-        Column(modifier = Modifier
-            .padding(paddingValues)
-            .fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+        ) {
 
             BoardMembersBar(
                 members = uiState.members,

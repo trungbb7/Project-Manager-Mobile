@@ -174,7 +174,8 @@ class MainFeaturesRepositoryImplement : MainFeaturesRepository {
 
     override suspend fun getCards(listId: String): Flow<List<Card>> = callbackFlow {
         val listener =
-            firestore.collection(Constants.CARD_COLLECTION).whereEqualTo("listId", listId).orderBy("createdAt")
+            firestore.collection(Constants.CARD_COLLECTION).whereEqualTo("listId", listId)
+                .orderBy("createdAt")
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
                         close(error)

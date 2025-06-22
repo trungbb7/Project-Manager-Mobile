@@ -57,7 +57,7 @@ fun MapPickerScreen(
     val uiState by viewModel.uiState.collectAsState()
     var location = LatLng(10.7769, 106.7009)
 
-    if(uiState.selectedLatLng != null) {
+    if (uiState.selectedLatLng != null) {
         location = uiState.selectedLatLng!!
     }
 
@@ -114,9 +114,11 @@ fun MapPickerScreen(
             }
         }
     ) { padding ->
-        Box(modifier = Modifier
-            .padding(padding)
-            .fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+        ) {
             GoogleMap(
                 modifier = Modifier.matchParentSize(),
                 cameraPositionState = cameraPositionState,

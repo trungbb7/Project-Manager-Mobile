@@ -20,7 +20,7 @@
     <string name="welcome_back">Chào mừng trở lại!</string>
     <string name="create_account">Tạo tài khoản mới</string>
     <string name="reset_password">Khôi phục mật khẩu</string>
-    
+
     <!-- Home Screen -->
     <string name="home">Trang chủ</string>
     <string name="logout">Đăng xuất</string>
