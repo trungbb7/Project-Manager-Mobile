@@ -2,7 +2,7 @@ import java.util.Properties
 
 val localProperties = Properties()
 val localPropertiesFile = rootProject.file("local.properties")
-if(localPropertiesFile.exists()) {
+if (localPropertiesFile.exists()) {
     localPropertiesFile.inputStream().use {
         localProperties.load(it)
     }
@@ -63,6 +63,9 @@ android {
         compose = true
         buildConfig = true
     }
+    packaging {
+        resources.excludes.add("META-INF/DEPENDENCIES")
+    }
 }
 
 dependencies {
@@ -76,8 +79,8 @@ dependencies {
     implementation("androidx.compose.material3:material3-window-size-class:1.3.2")
     implementation("androidx.compose.material3:material3-adaptive-navigation-suite:1.4.0-alpha15")
     implementation("androidx.compose.material:material-icons-extended")
-    implementation ("com.google.firebase:firebase-appcheck-playintegrity:17.1.1")
-    implementation ("com.google.firebase:firebase-appcheck-debug:17.1.1")
+    implementation("com.google.firebase:firebase-appcheck-playintegrity:17.1.1")
+    implementation("com.google.firebase:firebase-appcheck-debug:17.1.1")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("com.facebook.android:facebook-login:16.3.0")
     implementation("com.facebook.android:facebook-android-sdk:16.3.0")
@@ -118,7 +121,6 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.1")
 
 
-
 //     Kotlin + Coroutines
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 //    Retrofit
@@ -135,4 +137,10 @@ dependencies {
     implementation("com.google.android.libraries.places:places:3.4.0")
     // Thư viện Maps dành cho Jetpack Compose
     implementation("com.google.maps.android:maps-compose:4.3.3")
+
+
+    implementation("com.google.api-client:google-api-client-android:2.2.0")
+    implementation("com.google.apis:google-api-services-calendar:v3-rev20220715-2.0.0")
+    implementation("com.google.http-client:google-http-client-gson:1.43.3")
+
 }

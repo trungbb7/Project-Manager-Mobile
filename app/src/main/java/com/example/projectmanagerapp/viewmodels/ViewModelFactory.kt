@@ -50,17 +50,16 @@ class AddMemberViewModelFactory(
     }
 }
 
-
-
 class CardDetailViewModelFactory(
     private val mainFeaturesRepository: MainFeaturesRepository,
     private val boardId: String,
     private val listId: String,
     private val cardId: String,
-    private val workManager: WorkManager
+    private val workManager: WorkManager,
+    private val context: Context
 ): ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return CardDetailViewModel(mainFeaturesRepository, boardId, listId, cardId, workManager) as T
+        return CardDetailViewModel(mainFeaturesRepository, boardId, listId, cardId, workManager, context) as T
     }
 }
 

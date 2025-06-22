@@ -1,5 +1,6 @@
 package com.example.projectmanagerapp.data.repository
 
+import android.net.Uri
 import android.util.Log
 import com.example.projectmanagerapp.data.model.User
 import com.google.firebase.Timestamp
@@ -7,7 +8,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -16,10 +21,12 @@ import javax.inject.Singleton
 @Singleton
 class UserRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val storage: FirebaseStorage
 ) {
     companion object {
         private const val USERS_COLLECTION = "users"
+        private const val PROFILE_IMAGES_FOLDER = "profile_images"
         private const val TAG = "UserRepository"
     }
 
@@ -33,25 +40,18 @@ class UserRepository @Inject constructor(
                 val updatedProviders = updateLinkedProviders(currentUser.linkedProviders, firebaseUser)
                 
                 val updates = mapOf(
-                    "email" to (firebaseUser.email ?: currentUser.email),
-                    "displayName" to (firebaseUser.displayName ?: currentUser.displayName),
-                    "photoUrl" to (firebaseUser.photoUrl?.toString() ?: currentUser.photoUrl),
-                    "phoneNumber" to (firebaseUser.phoneNumber ?: currentUser.phoneNumber),
                     "linkedProviders" to updatedProviders,
                     "isEmailVerified" to firebaseUser.isEmailVerified,
                     "updatedAt" to Timestamp.now(),
                     "lastLoginAt" to Timestamp.now()
                 )
                 
-                userDoc.set(updates, SetOptions.merge()).await()
+                userDoc.update(updates).await()
                 currentUser.copy(
-                    email = firebaseUser.email ?: currentUser.email,
-                    displayName = firebaseUser.displayName ?: currentUser.displayName,
-                    photoUrl = firebaseUser.photoUrl?.toString() ?: currentUser.photoUrl,
-                    phoneNumber = firebaseUser.phoneNumber ?: currentUser.phoneNumber,
                     linkedProviders = updatedProviders,
                     isEmailVerified = firebaseUser.isEmailVerified,
-                    lastLoginAt = Timestamp.now()
+                    updatedAt = updates["updatedAt"] as Timestamp,
+                    lastLoginAt = updates["lastLoginAt"] as Timestamp
                 )
             } else {
                 val newUser = User(
@@ -117,20 +117,23 @@ class UserRepository @Inject constructor(
         }
     }
 
-    fun getUserFlow(uid: String): Flow<User?> = flow {
-        try {
-            firestore.collection(USERS_COLLECTION)
-                .document(uid)
-                .addSnapshotListener { snapshot, error ->
-                    if (error != null) {
-                        Log.e(TAG, "Error listening to user changes", error)
-                        return@addSnapshotListener
-                    }
-                    
-                    val user = snapshot?.toObject(User::class.java)
-                }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error setting up user flow", e)
+    fun getUserFlow(uid: String): Flow<User?> = callbackFlow {
+        val documentReference = firestore.collection(USERS_COLLECTION).document(uid)
+
+        val listener = documentReference.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.e(TAG, "Error listening to user changes", error)
+                close(error) // Close the flow with an error
+                return@addSnapshotListener
+            }
+            val user = snapshot?.toObject(User::class.java)
+            trySend(user).isSuccess // Offer the user to the flow
+        }
+
+        // When the flow is cancelled, remove the listener
+        awaitClose {
+            Log.d(TAG, "Closing user flow listener")
+            listener.remove()
         }
     }
 
@@ -157,6 +160,18 @@ class UserRepository @Inject constructor(
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e(TAG, "Error deleting user", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun uploadProfileImage(uid: String, imageUri: Uri): Result<String> {
+        return try {
+            val storageRef = storage.reference.child("$PROFILE_IMAGES_FOLDER/$uid.jpg")
+            val downloadUrl = storageRef.putFile(imageUri).await()
+                .storage.downloadUrl.await().toString()
+            Result.success(downloadUrl)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error uploading profile image", e)
             Result.failure(e)
         }
     }

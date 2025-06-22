@@ -44,6 +44,9 @@ import com.example.projectmanagerapp.viewmodels.HomeViewModelFactory
 import com.example.projectmanagerapp.viewmodels.MapPickerViewModel
 import com.example.projectmanagerapp.viewmodels.MapPickerViewModelFactory
 import com.google.android.libraries.places.api.Places
+import com.example.projectmanagerapp.ui.profile.UserProfileScreen
+import com.example.projectmanagerapp.ui.profile.UserProfileViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -160,7 +163,11 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             )
         }
         composable(AppDestinations.PROFILE_ROUTE) {
-            Profile()
+            val viewModel: UserProfileViewModel = hiltViewModel()
+            UserProfileScreen(
+                onNavigateBack = { navController.popBackStack() },
+                viewModel = viewModel
+            )
         }
         composable(AppDestinations.CREATE_BOARD_ROUTE) {
             val repository = MainFeaturesRepositoryImplement()
@@ -225,20 +232,17 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
                 navArgument("cardId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val boardId = backStackEntry.arguments?.getString("boardId")
-            val listId = backStackEntry.arguments?.getString("listId")
-            val cardId = backStackEntry.arguments?.getString("cardId")
+            val boardId = backStackEntry.arguments?.getString("boardId")!!
+            val listId = backStackEntry.arguments?.getString("listId")!!
+            val cardId = backStackEntry.arguments?.getString("cardId")!!
             val repository = MainFeaturesRepositoryImplement()
-
             val workManager = WorkManager.getInstance(context)
-
             val viewModel: CardDetailViewModel =
-                viewModel(factory = CardDetailViewModelFactory(repository, boardId!!, listId!!, cardId!!, workManager))
+                viewModel(factory = CardDetailViewModelFactory(repository, boardId, listId, cardId, workManager, context.applicationContext))
             CardDetailScreen(
                 viewModel = viewModel,
                 navController = navController,
-                onNavigateBack = {
-                    navController.popBackStack()}
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
@@ -251,9 +255,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
 
         composable(
             route = AppDestinations.ADD_MEMBER_ROUTE,
-            arguments = listOf(
-                navArgument("boardId") { type = NavType.StringType }
-            )
+            arguments = listOf(navArgument("boardId") { type = NavType.StringType })
         ) { backStackEntry ->
             val boardId = backStackEntry.arguments?.getString("boardId")
             val repository = MainFeaturesRepositoryImplement()
@@ -261,8 +263,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
                 viewModel(factory = AddMemberViewModelFactory(repository, boardId!!))
             AddMemberScreen(
                 viewModel = viewModel,
-                onNavigateBack = {
-                    navController.popBackStack()}
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }
