@@ -14,7 +14,7 @@ data class HomeViewModelUIState(
     val user: User? = null
 )
 
-class HomeViewModel(private val repository: MainFeaturesRepository): ViewModel() {
+class HomeViewModel(private val repository: MainFeaturesRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeViewModelUIState())
     val uiState: StateFlow<HomeViewModelUIState> = _uiState.asStateFlow()
 

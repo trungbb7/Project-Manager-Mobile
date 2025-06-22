@@ -9,9 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,9 +19,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -37,9 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -60,16 +52,20 @@ import com.google.maps.android.compose.rememberCameraPositionState
 @Composable
 fun MapPickerScreen(
     navController: NavController,
-     viewModel: MapPickerViewModel
+    viewModel: MapPickerViewModel
 ) {
-    val hcmCity = LatLng(10.7769, 106.7009)
+    val uiState by viewModel.uiState.collectAsState()
+    var location = LatLng(10.7769, 106.7009)
+
+    if(uiState.selectedLatLng != null) {
+        location = uiState.selectedLatLng!!
+    }
+
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(hcmCity, 15f)
+        position = CameraPosition.fromLatLngZoom(location, 15f)
     }
 
 
-
-    val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState.selectedLatLng) {
         uiState.selectedLatLng?.let {
@@ -85,14 +81,19 @@ fun MapPickerScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Chọn một vị trí") },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack, null) } }
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack, null
+                        )
+                    }
+                }
             )
         },
         floatingActionButton = {
             Button(
                 onClick = {
-                    uiState.selectedLatLng?.let { latLng  ->
+                    uiState.selectedLatLng?.let { latLng ->
                         val result = CardLocation(
                             latitude = latLng.latitude,
                             longitude = latLng.longitude,
@@ -113,7 +114,9 @@ fun MapPickerScreen(
             }
         }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding).fillMaxSize()) {
+        Box(modifier = Modifier
+            .padding(padding)
+            .fillMaxSize()) {
             GoogleMap(
                 modifier = Modifier.matchParentSize(),
                 cameraPositionState = cameraPositionState,
@@ -131,10 +134,11 @@ fun MapPickerScreen(
                 }
             }
             // Lớp tìm kiếm ở trên cùng
-            Column(modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(8.dp)
-                .fillMaxWidth()
+            Column(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(8.dp)
+                    .fillMaxWidth()
             ) {
                 // Ô tìm kiếm
                 TextField(
@@ -148,7 +152,7 @@ fun MapPickerScreen(
 
                 // Danh sách kết quả gợi ý
                 if (uiState.autocompletePredictions.isNotEmpty()) {
-                    LazyColumn (
+                    LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 4.dp)
@@ -164,8 +168,14 @@ fun MapPickerScreen(
                                 Icon(Icons.Default.LocationOn, contentDescription = null)
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Column {
-                                    Text(prediction.getPrimaryText(null).toString(), fontWeight = FontWeight.Bold)
-                                    Text(prediction.getSecondaryText(null).toString(), style = MaterialTheme.typography.bodySmall)
+                                    Text(
+                                        prediction.getPrimaryText(null).toString(),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        prediction.getSecondaryText(null).toString(),
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
                                 }
                             }
                             HorizontalDivider()

@@ -32,7 +32,7 @@ data class CardLocation(
     val longitude: Double = 0.0,
     val address: String = "",
     val placeName: String? = null
-): Parcelable
+) : Parcelable
 
 data class PMList(
     @DocumentId val id: String = "",
@@ -54,7 +54,7 @@ data class Board(
 
 // Các model phụ
 data class ChecklistItem(
-    val id : String = UUID.randomUUID().toString(),
+    val id: String = UUID.randomUUID().toString(),
     var text: String = "",
     var isChecked: Boolean = false,
     val createdAt: Long = System.currentTimeMillis()

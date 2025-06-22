@@ -1,22 +1,76 @@
 package com.example.projectmanagerapp.ui.profile
 
-import androidx.compose.foundation.layout.*
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Work
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.projectmanagerapp.R
 import com.example.projectmanagerapp.data.model.User
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,42 +80,113 @@ fun UserProfileScreen(
 ) {
     val user by viewModel.user.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
+    var isEditing by remember { mutableStateOf(false) }
+
+    // State for edited fields
+    var displayName by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
+    var location by remember { mutableStateOf("") }
+    var department by remember { mutableStateOf("") }
+    var position by remember { mutableStateOf("") }
+    var bio by remember { mutableStateOf("") }
+    var photoUrl by remember { mutableStateOf<Uri?>(null) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.setPhotoUri(it)
+        }
+    }
+
+    // This effect now only handles the photo URI from the view model
+    LaunchedEffect(viewModel.photoUri.collectAsState().value) {
+        photoUrl = viewModel.photoUri.value
+    }
+
+    // Show snackbar on error
+    LaunchedEffect(error) {
+        error?.let {
+            scope.launch {
+                snackbarHostState.showSnackbar(it)
+                viewModel.clearError()
+            }
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Hồ sơ người dùng") },
+                title = { Text(if (isEditing) "Chỉnh sửa hồ sơ" else "Hồ sơ người dùng") },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Quay lại")
+                    if (isEditing) {
+                        IconButton(onClick = {
+                            isEditing = false
+                            viewModel.clearPhotoUri()
+                        }) {
+                            Icon(Icons.Default.Close, contentDescription = "Hủy")
+                        }
+                    } else {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Quay lại")
+                        }
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* TODO: Edit profile */ }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Chỉnh sửa")
+                    if (isEditing) {
+                        Button(onClick = {
+                            val updates = mutableMapOf<String, Any>()
+                            if (displayName != user?.displayName) updates["displayName"] =
+                                displayName
+                            if (phoneNumber != user?.phoneNumber) updates["phoneNumber"] =
+                                phoneNumber
+                            if (location != user?.location) updates["location"] = location
+                            if (department != user?.department) updates["department"] = department
+                            if (position != user?.position) updates["position"] = position
+                            if (bio != user?.bio) updates["bio"] = bio
+
+                            viewModel.saveProfile(updates, photoUrl)
+                            isEditing = false
+                        }) {
+                            Text("Lưu")
+                        }
+                    } else {
+                        IconButton(onClick = {
+                            isEditing = true
+                            user?.let {
+                                displayName = it.displayName
+                                phoneNumber = it.phoneNumber
+                                location = it.location
+                                department = it.department
+                                position = it.position
+                                bio = it.bio
+                            }
+                        }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Chỉnh sửa")
+                        }
                     }
                 }
             )
         }
     ) { paddingValues ->
-        if (isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            user?.let { userData ->
-                UserProfileContent(
-                    user = userData,
+        when {
+            isLoading -> {
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
-                )
-            } ?: run {
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            user == null -> {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -71,6 +196,30 @@ fun UserProfileScreen(
                     Text("Không thể tải thông tin người dùng")
                 }
             }
+
+            else -> {
+                UserProfileContent(
+                    user = user!!,
+                    isEditing = isEditing,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    displayName = displayName,
+                    onDisplayNameChange = { displayName = it },
+                    phoneNumber = phoneNumber,
+                    onPhoneNumberChange = { phoneNumber = it },
+                    location = location,
+                    onLocationChange = { location = it },
+                    department = department,
+                    onDepartmentChange = { department = it },
+                    position = position,
+                    onPositionChange = { position = it },
+                    bio = bio,
+                    onBioChange = { bio = it },
+                    photoUrl = photoUrl,
+                    onImageClick = { imagePickerLauncher.launch("image/*") }
+                )
+            }
         }
     }
 }
@@ -78,7 +227,22 @@ fun UserProfileScreen(
 @Composable
 private fun UserProfileContent(
     user: User,
-    modifier: Modifier = Modifier
+    isEditing: Boolean,
+    modifier: Modifier = Modifier,
+    displayName: String,
+    onDisplayNameChange: (String) -> Unit,
+    phoneNumber: String,
+    onPhoneNumberChange: (String) -> Unit,
+    location: String,
+    onLocationChange: (String) -> Unit,
+    department: String,
+    onDepartmentChange: (String) -> Unit,
+    position: String,
+    onPositionChange: (String) -> Unit,
+    bio: String,
+    onBioChange: (String) -> Unit,
+    photoUrl: Uri?,
+    onImageClick: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -87,8 +251,15 @@ private fun UserProfileContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Profile Header
-        ProfileHeader(user = user)
-        
+        ProfileHeader(
+            user = user,
+            isEditing = isEditing,
+            displayName = displayName,
+            onDisplayNameChange = onDisplayNameChange,
+            photoUrl = photoUrl,
+            onImageClick = onImageClick
+        )
+
         // Basic Info
         ProfileSection(
             title = "Thông tin cơ bản",
@@ -99,28 +270,49 @@ private fun UserProfileContent(
                 value = user.email,
                 icon = Icons.Default.Email
             )
-            if (user.phoneNumber.isNotBlank()) {
-                ProfileInfoItem(
-                    label = "Số điện thoại",
-                    value = user.phoneNumber,
-                    icon = Icons.Default.Phone
-                )
-            }
-            if (user.location.isNotBlank()) {
-                ProfileInfoItem(
-                    label = "Địa điểm",
-                    value = user.location,
-                    icon = Icons.Default.LocationOn
-                )
+
+            if (isEditing) {
+                OutlinedTextField(
+                    value = phoneNumber,
+                    onValueChange = onPhoneNumberChange,
+                    label = { Text("Số điện thoại") })
+                OutlinedTextField(
+                    value = location,
+                    onValueChange = onLocationChange,
+                    label = { Text("Địa điểm") })
+            } else {
+                if (user.phoneNumber.isNotBlank()) {
+                    ProfileInfoItem(
+                        label = "Số điện thoại",
+                        value = user.phoneNumber,
+                        icon = Icons.Default.Phone
+                    )
+                }
+                if (user.location.isNotBlank()) {
+                    ProfileInfoItem(
+                        label = "Địa điểm",
+                        value = user.location,
+                        icon = Icons.Default.LocationOn
+                    )
+                }
             }
         }
-        
+
         // Work Info
-        if (user.department.isNotBlank() || user.position.isNotBlank()) {
-            ProfileSection(
-                title = "Thông tin công việc",
-                icon = Icons.Default.Work
-            ) {
+        ProfileSection(
+            title = "Thông tin công việc",
+            icon = Icons.Default.Work
+        ) {
+            if (isEditing) {
+                OutlinedTextField(
+                    value = department,
+                    onValueChange = onDepartmentChange,
+                    label = { Text("Phòng ban") })
+                OutlinedTextField(
+                    value = position,
+                    onValueChange = onPositionChange,
+                    label = { Text("Chức vụ") })
+            } else {
                 if (user.department.isNotBlank()) {
                     ProfileInfoItem(
                         label = "Phòng ban",
@@ -137,94 +329,141 @@ private fun UserProfileContent(
                 }
             }
         }
-        
-        // Skills
-        if (user.skills.isNotEmpty()) {
-            ProfileSection(
-                title = "Kỹ năng",
-                icon = Icons.Default.Star
-            ) {
-                SkillsChips(skills = user.skills)
-            }
-        }
-        
-        // Linked Providers
-        if (user.linkedProviders.isNotEmpty()) {
-            ProfileSection(
-                title = "Tài khoản liên kết",
-                icon = Icons.Default.Link
-            ) {
-                LinkedProvidersChips(providers = user.linkedProviders)
-            }
-        }
-        
+
         // Bio
-        if (user.bio.isNotBlank()) {
-            ProfileSection(
-                title = "Giới thiệu",
-                icon = Icons.Default.Description
-            ) {
-                Text(
-                    text = user.bio,
-                    style = MaterialTheme.typography.bodyMedium
+        ProfileSection(
+            title = "Giới thiệu",
+            icon = Icons.Default.Description
+        ) {
+            if (isEditing) {
+                OutlinedTextField(
+                    value = bio,
+                    onValueChange = onBioChange,
+                    label = { Text("Giới thiệu") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = 100.dp)
                 )
+            } else {
+                if (user.bio.isNotBlank()) {
+                    Text(
+                        text = user.bio,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                } else {
+                    Text(
+                        text = "Chưa có giới thiệu.",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Light
+                    )
+                }
+            }
+        }
+
+        // Skills
+        if (!isEditing) {
+            if (user.skills.isNotEmpty()) {
+                ProfileSection(
+                    title = "Kỹ năng",
+                    icon = Icons.Default.Star
+                ) {
+                    SkillsChips(skills = user.skills)
+                }
+            }
+
+            // Linked Providers
+            if (user.linkedProviders.isNotEmpty()) {
+                ProfileSection(
+                    title = "Tài khoản liên kết",
+                    icon = Icons.Default.Link
+                ) {
+                    LinkedProvidersChips(providers = user.linkedProviders)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ProfileHeader(user: User) {
-    Card(
+private fun ProfileHeader(
+    user: User,
+    isEditing: Boolean,
+    displayName: String,
+    onDisplayNameChange: (String) -> Unit,
+    photoUrl: Uri?,
+    onImageClick: () -> Unit,
+) {
+    LocalContext.current
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Profile Picture
+        Box(modifier = Modifier.size(120.dp)) {
             AsyncImage(
-                model = user.photoUrl.ifBlank { "https://via.placeholder.com/120" },
-                contentDescription = "Profile Picture",
+                model = photoUrl ?: user.photoUrl.takeIf { it.isNotBlank() }
+                ?: R.drawable.user_image_placeholder,
+                contentDescription = "Ảnh đại diện",
                 modifier = Modifier
                     .size(120.dp)
-                    .clip(CircleShape),
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable(enabled = isEditing, onClick = onImageClick),
                 contentScale = ContentScale.Crop
             )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Name
+
+            if (isEditing) {
+                IconButton(
+                    onClick = onImageClick,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape)
+                ) {
+                    Icon(
+                        Icons.Default.PhotoCamera,
+                        contentDescription = "Đổi ảnh",
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
+        }
+
+        if (isEditing) {
+            OutlinedTextField(
+                value = displayName,
+                onValueChange = onDisplayNameChange,
+                label = { Text("Họ và tên") }
+            )
+        } else {
             Text(
                 text = user.displayName.ifBlank { "Người dùng" },
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
-            
-            // Role
-            Text(
-                text = user.role.replaceFirstChar { it.uppercase() },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary
+        }
+
+        // Role
+        Text(
+            text = user.role.replaceFirstChar { it.uppercase() },
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        // Status
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                imageVector = if (user.isActive) Icons.Default.CheckCircle else Icons.Default.Cancel,
+                contentDescription = null,
+                tint = if (user.isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(16.dp)
             )
-            
-            // Status
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    imageVector = if (user.isActive) Icons.Default.CheckCircle else Icons.Default.Cancel,
-                    contentDescription = null,
-                    tint = if (user.isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(
-                    text = if (user.isActive) "Hoạt động" else "Không hoạt động",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+            Text(
+                text = if (user.isActive) "Hoạt động" else "Không hoạt động",
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }
@@ -257,9 +496,9 @@ private fun ProfileSection(
                     fontWeight = FontWeight.SemiBold
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             content()
         }
     }

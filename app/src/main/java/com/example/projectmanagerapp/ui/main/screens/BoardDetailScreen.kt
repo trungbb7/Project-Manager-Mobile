@@ -4,7 +4,20 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -20,8 +33,31 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,12 +85,12 @@ fun BoardDetailScreen(
     onInviteClick: () -> Unit,
     onCardItemClicked: (listId: String, cardId: String) -> Unit
 ) {
-    
+
     val uiState by viewModel.uiState.collectAsState()
-    val board = uiState.board?: return
+    val board = uiState.board ?: return
     val lists = uiState.lists
     val cardsByList = uiState.cardsByList
-    
+
     var showAddListInput by remember { mutableStateOf(false) }
     var newListTitle by remember { mutableStateOf("") }
 
@@ -89,7 +125,9 @@ fun BoardDetailScreen(
         containerColor = Color(board.backgroundColor.toColorInt())
     ) { paddingValues ->
 
-        Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+        Column(modifier = Modifier
+            .padding(paddingValues)
+            .fillMaxSize()) {
 
             BoardMembersBar(
                 members = uiState.members,
@@ -117,8 +155,7 @@ fun BoardDetailScreen(
                             }
                         },
                         // List Menu Actions
-                        onRenameList = {
-                                newName -> viewModel.updateList(pmList.copy(name = newName)) },
+                        onRenameList = { newName -> viewModel.updateList(pmList.copy(name = newName)) },
                         onDeleteList = { viewModel.deleteList(pmList.id) },
                         onAddCardFromMenu = { cardTitle ->
                             viewModel.addCard(Card(title = cardTitle, listId = pmList.id))
@@ -130,14 +167,15 @@ fun BoardDetailScreen(
                         onDeleteCard = { cardId -> viewModel.deleteCard(cardId) },
                         // Move Card Actions
                         onToggleSelectCardForMove = { cardId, sourceListId ->
-                            cardSelectedForMoveInfo = if (cardSelectedForMoveInfo?.first == cardId) {
-                                null // Bỏ chọn nếu click lại thẻ đang chọn
-                            } else {
-                                Pair(cardId, sourceListId) // Chọn thẻ mới
-                            }
+                            cardSelectedForMoveInfo =
+                                if (cardSelectedForMoveInfo?.first == cardId) {
+                                    null // Bỏ chọn nếu click lại thẻ đang chọn
+                                } else {
+                                    Pair(cardId, sourceListId) // Chọn thẻ mới
+                                }
                         },
                         onConfirmMoveCardToList = { targetListId ->
-                            cardSelectedForMoveInfo?.let { (cardId, sourceListId) ->
+                            cardSelectedForMoveInfo?.let { (cardId, _) ->
                                 viewModel.moveCard(cardId, targetListId)
                                 cardSelectedForMoveInfo = null
                             }
@@ -156,7 +194,12 @@ fun BoardDetailScreen(
                         onListTitleChange = { newListTitle = it },
                         onAddList = {
                             if (newListTitle.isNotBlank()) {
-                                viewModel.createList(PMList(name = newListTitle, boardId = board.id))
+                                viewModel.createList(
+                                    PMList(
+                                        name = newListTitle,
+                                        boardId = board.id
+                                    )
+                                )
                                 newListTitle = ""
                                 showAddListInput = false
                             }
@@ -204,7 +247,6 @@ fun ListItemColumn(
         Column(modifier = Modifier.padding(8.dp)) {
 
 
-
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -218,7 +260,8 @@ fun ListItemColumn(
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.White, unfocusedContainerColor = Color.White,
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
                         ),
                         trailingIcon = {
                             IconButton(onClick = {
@@ -271,7 +314,9 @@ fun ListItemColumn(
 
             LazyColumn(
                 state = listState,
-                modifier = Modifier.weight(1f).fillMaxWidth(),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 itemsIndexed(cards, key = { _, card -> card.id }) { _, card ->
@@ -283,7 +328,7 @@ fun ListItemColumn(
                         onUpdateCard = onUpdateCard,
                         onDeleteCard = onDeleteCard,
                         onSelectForMove = { onToggleSelectCardForMove(card.id, pmList.id) },
-                        onCardItemClicked = {listId, cardId ->
+                        onCardItemClicked = { listId, cardId ->
                             onCardItemClicked(listId, cardId)
                         }
                     )
@@ -374,14 +419,18 @@ fun CardItem(
                     Icons.Filled.CheckCircle,
                     contentDescription = "Đã chọn để di chuyển",
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp).padding(end = 4.dp)
+                    modifier = Modifier
+                        .size(18.dp)
+                        .padding(end = 4.dp)
                 )
             }
             if (isEditingCardTitle) {
                 OutlinedTextField(
                     value = editingCardTitle,
                     onValueChange = { editingCardTitle = it },
-                    modifier = Modifier.weight(1f).padding(vertical = 4.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(vertical = 4.dp),
                     singleLine = true,
                     textStyle = MaterialTheme.typography.bodyMedium,
                     trailingIcon = {
@@ -397,15 +446,22 @@ fun CardItem(
             } else {
                 Text(
                     text = card.title,
-                    modifier = Modifier.weight(1f).padding(vertical = 6.dp).clickable {
-                        onCardItemClicked(listId, card.id)
-                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(vertical = 6.dp)
+                        .clickable {
+                            onCardItemClicked(listId, card.id)
+                        },
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
             Box {
                 IconButton(onClick = { showCardMenu = true }) {
-                    Icon(Icons.Filled.MoreVert, contentDescription = "Tùy chọn thẻ", Modifier.size(18.dp))
+                    Icon(
+                        Icons.Filled.MoreVert,
+                        contentDescription = "Tùy chọn thẻ",
+                        Modifier.size(18.dp)
+                    )
                 }
                 CardOptionsMenu(
                     expanded = showCardMenu,
@@ -460,14 +516,26 @@ fun ListOptionsMenu(
             DropdownMenuItem(
                 text = { Text("Chuyển thẻ được chọn vào đây") },
                 onClick = onMoveCardToThisListClick,
-                leadingIcon = { Icon(Icons.Filled.Build, null, tint = MaterialTheme.colorScheme.primary) }
+                leadingIcon = {
+                    Icon(
+                        Icons.Filled.Build,
+                        null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             )
         }
         Divider()
         DropdownMenuItem(
             text = { Text("Xóa danh sách này") },
             onClick = onDeleteClick,
-            leadingIcon = { Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error) },
+            leadingIcon = {
+                Icon(
+                    Icons.Filled.Delete,
+                    null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
             // colors = MenuDefaults.itemColors(textColor = MaterialTheme.colorScheme.error) // Material 3 không có cách này trực tiếp, dùng tint cho icon
         )
     }
@@ -501,7 +569,13 @@ fun CardOptionsMenu(
         DropdownMenuItem(
             text = { Text("Xóa thẻ này") },
             onClick = onDeleteClick,
-            leadingIcon = { Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error) }
+            leadingIcon = {
+                Icon(
+                    Icons.Filled.Delete,
+                    null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
         )
     }
 }
@@ -509,11 +583,11 @@ fun CardOptionsMenu(
 // --- Composable cho cột "Thêm danh sách mới"
 @Composable
 fun AddListColumn(
-                   showInput: Boolean,
-                   onShowInputToggle: () -> Unit,
-                   listTitle: String,
-                   onListTitleChange: (String) -> Unit,
-                   onAddList: () -> Unit
+    showInput: Boolean,
+    onShowInputToggle: () -> Unit,
+    listTitle: String,
+    onListTitleChange: (String) -> Unit,
+    onAddList: () -> Unit
 ) {
     if (showInput) {
         Card(
@@ -569,10 +643,12 @@ fun BoardMembersBar(
     members: List<User>,
     onInviteClick: () -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxWidth()
-        .padding(horizontal = 16.dp, vertical = 8.dp)
-        .background(color = Color("#FFFFFF".toColorInt()).copy(alpha = 0.1f))
-        .clip(MaterialTheme.shapes.medium)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(color = Color("#FFFFFF".toColorInt()).copy(alpha = 0.1f))
+            .clip(MaterialTheme.shapes.medium)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -580,7 +656,10 @@ fun BoardMembersBar(
         ) {
             // Nút mời thành viên
             OutlinedButton(onClick = onInviteClick) {
-                Icon(painterResource(R.drawable.baseline_person_add_alt_1_24), contentDescription = "Mời thành viên")
+                Icon(
+                    painterResource(R.drawable.baseline_person_add_alt_1_24),
+                    contentDescription = "Mời thành viên"
+                )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text("Mời")
             }
@@ -598,7 +677,10 @@ fun BoardMembersBar(
                             .padding(start = 4.dp)
                             .size(36.dp)
                             .clip(CircleShape)
-                            .border(BorderStroke(2.dp, MaterialTheme.colorScheme.surface), CircleShape)
+                            .border(
+                                BorderStroke(2.dp, MaterialTheme.colorScheme.surface),
+                                CircleShape
+                            )
                     )
                 }
             }

@@ -58,10 +58,12 @@ fun AddMemberScreen(
             }
         })
     }) { padding ->
-        Column(modifier = Modifier
-            .padding(padding)
-            .fillMaxSize()
-            .padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
             Text("Mời thành viên mới vào bảng bằng email của họ.")
             Spacer(modifier = Modifier.height(8.dp))
 

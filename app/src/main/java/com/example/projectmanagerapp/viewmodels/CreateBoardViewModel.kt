@@ -31,7 +31,7 @@ data class CreateBoardState(
 
 class CreateBoardViewModel(
     private val mainFeaturesRepository: MainFeaturesRepository
-): ViewModel() {
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreateBoardState())
     val uiState: StateFlow<CreateBoardState> = _uiState.asStateFlow()
@@ -45,7 +45,7 @@ class CreateBoardViewModel(
             try {
                 val backgroundImageUrls = mainFeaturesRepository.getRandomBackgroundImages()
                 _uiState.value = _uiState.value.copy(backgroundImageUrls = backgroundImageUrls)
-            }catch (e: Exception) {
+            } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message)
             }
         }
@@ -53,15 +53,26 @@ class CreateBoardViewModel(
 
 
     fun onImageSelected(uri: Uri?) {
-        _uiState.value = _uiState.value.copy(selectedImageUri = uri, selectedImageUrl = null, backgroundType = BackgroundType.IMAGE)
+        _uiState.value = _uiState.value.copy(
+            selectedImageUri = uri,
+            selectedImageUrl = null,
+            backgroundType = BackgroundType.IMAGE
+        )
     }
 
-    fun onBackgroundUrlSelected(url: String){
-        _uiState.value = _uiState.value.copy(selectedImageUrl = url, selectedImageUri = null,  backgroundType = BackgroundType.IMAGE)
+    fun onBackgroundUrlSelected(url: String) {
+        _uiState.value = _uiState.value.copy(
+            selectedImageUrl = url,
+            selectedImageUri = null,
+            backgroundType = BackgroundType.IMAGE
+        )
     }
 
     fun onBackgroundColorChange(color: String) {
-        _uiState.value = _uiState.value.copy(selectedBackgroundColor = color, backgroundType = BackgroundType.COLOR)
+        _uiState.value = _uiState.value.copy(
+            selectedBackgroundColor = color,
+            backgroundType = BackgroundType.COLOR
+        )
     }
 
     fun onBoardNameChange(name: String) {
@@ -69,24 +80,27 @@ class CreateBoardViewModel(
     }
 
     fun createBoard() {
-        if(_uiState.value.boardName.isBlank()) {
+        if (_uiState.value.boardName.isBlank()) {
             _uiState.value = _uiState.value.copy(error = "Tên bảng không được để trống")
             return
         }
 
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
-            try{
+            try {
                 var imageUrl: String? = null
-                if(_uiState.value.backgroundType == BackgroundType.IMAGE) {
-                    imageUrl =  _uiState.value.selectedImageUri?.let {
+                if (_uiState.value.backgroundType == BackgroundType.IMAGE) {
+                    imageUrl = _uiState.value.selectedImageUri?.let {
                         mainFeaturesRepository.uploadBoardBackgroundImage(it)
                     }
                 }
 
                 val currentUserId = mainFeaturesRepository.getCurrentUserId()
-                if(currentUserId == null) {
-                    _uiState.value = _uiState.value.copy(error = "Không thể lấy thông tin người dùng hiện tại", isLoading = false)
+                if (currentUserId == null) {
+                    _uiState.value = _uiState.value.copy(
+                        error = "Không thể lấy thông tin người dùng hiện tại",
+                        isLoading = false
+                    )
                     return@launch
                 }
                 val board = Board(
@@ -98,8 +112,9 @@ class CreateBoardViewModel(
                 )
                 mainFeaturesRepository.createBoard(board)
                 _uiState.value = _uiState.value.copy(success = true, isLoading = false)
-            }catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message, isLoading = false, success = false)
+            } catch (e: Exception) {
+                _uiState.value =
+                    _uiState.value.copy(error = e.message, isLoading = false, success = false)
 
             }
         }

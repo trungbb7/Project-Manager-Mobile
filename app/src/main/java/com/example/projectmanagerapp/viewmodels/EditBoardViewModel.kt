@@ -24,7 +24,10 @@ data class EditBoardViewModelState(
 )
 
 
-class EditBoardViewModel(private val mainFeaturesRepository: MainFeaturesRepository, private val boardId: String) :
+class EditBoardViewModel(
+    private val mainFeaturesRepository: MainFeaturesRepository,
+    private val boardId: String
+) :
     ViewModel() {
     private val _uiState = MutableStateFlow(EditBoardViewModelState())
     val uiState: StateFlow<EditBoardViewModelState> = _uiState.asStateFlow()

@@ -10,8 +10,9 @@ import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 
-class DueDateNotificationWorker(private val context: Context, private val workerParams: WorkerParameters
-): CoroutineWorker(context, workerParams) {
+class DueDateNotificationWorker(
+    private val context: Context, private val workerParams: WorkerParameters
+) : CoroutineWorker(context, workerParams) {
 
     companion object {
         const val NOTIFICATION_ID_KEY = "notification_id"
@@ -31,7 +32,8 @@ class DueDateNotificationWorker(private val context: Context, private val worker
     }
 
     private fun showNotification(id: Int, title: String, content: String, cardId: String?) {
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(

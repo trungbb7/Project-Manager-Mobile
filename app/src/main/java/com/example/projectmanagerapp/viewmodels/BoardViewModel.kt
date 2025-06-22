@@ -16,7 +16,7 @@ data class BoardUIState(
 
 class BoardViewModel(
     val mainFeaturesRepository: MainFeaturesRepository
-): ViewModel() {
+) : ViewModel() {
 
     private val _boardUIState = MutableStateFlow(BoardUIState())
     val boardUIState = _boardUIState.asStateFlow()
@@ -35,7 +35,7 @@ class BoardViewModel(
                         idLoading = false
                     )
                 }
-            }catch (e: Exception) {
+            } catch (e: Exception) {
                 _boardUIState.value = BoardUIState(
                     error = e.message
                 )
@@ -71,6 +71,6 @@ class BoardViewModel(
     }
 
     fun clearError() {
-        _boardUIState.value  = _boardUIState.value.copy(error = "")
+        _boardUIState.value = _boardUIState.value.copy(error = "")
     }
 }

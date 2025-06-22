@@ -2,37 +2,39 @@ package com.example.projectmanagerapp.utils
 
 import AddMemberScreen
 import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import android.util.Log
-import androidx.annotation.RequiresApi
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.projectmanagerapp.MainActivity
-import com.example.projectmanagerapp.ui.auth.AuthViewModel
-import com.example.projectmanagerapp.ui.auth.ForgotPasswordScreen
 import androidx.navigation.navArgument
 import androidx.work.WorkManager
+import com.example.projectmanagerapp.MainActivity
+import com.example.projectmanagerapp.repositories.MainFeaturesRepositoryImplement
+import com.example.projectmanagerapp.ui.auth.AuthViewModel
+import com.example.projectmanagerapp.ui.auth.ForgotPasswordScreen
 import com.example.projectmanagerapp.ui.auth.LoginScreen
 import com.example.projectmanagerapp.ui.auth.RegisterScreen
-import com.example.projectmanagerapp.viewmodels.BoardViewModel
-import com.example.projectmanagerapp.viewmodels.BoardViewModelFactory
-import com.example.projectmanagerapp.ui.main.screens.CreateBoardScreen
-import com.example.projectmanagerapp.ui.main.screens.HomeScreen
-import com.example.projectmanagerapp.repositories.MainFeaturesRepositoryImplement
-import com.example.projectmanagerapp.ui.auth.Profile
 import com.example.projectmanagerapp.ui.main.screens.BoardDetailScreen
 import com.example.projectmanagerapp.ui.main.screens.CardDetailScreen
+import com.example.projectmanagerapp.ui.main.screens.CreateBoardScreen
 import com.example.projectmanagerapp.ui.main.screens.EditBoardScreen
+import com.example.projectmanagerapp.ui.main.screens.HomeScreen
 import com.example.projectmanagerapp.ui.main.screens.MapPickerScreen
+import com.example.projectmanagerapp.ui.profile.UserProfileScreen
+import com.example.projectmanagerapp.ui.profile.UserProfileViewModel
 import com.example.projectmanagerapp.viewmodels.AddMemberViewModel
 import com.example.projectmanagerapp.viewmodels.AddMemberViewModelFactory
 import com.example.projectmanagerapp.viewmodels.BoardDetailViewModel
 import com.example.projectmanagerapp.viewmodels.BoardDetailViewModelFactory
+import com.example.projectmanagerapp.viewmodels.BoardViewModel
+import com.example.projectmanagerapp.viewmodels.BoardViewModelFactory
 import com.example.projectmanagerapp.viewmodels.CardDetailViewModel
 import com.example.projectmanagerapp.viewmodels.CardDetailViewModelFactory
 import com.example.projectmanagerapp.viewmodels.CreateBoardViewModel
@@ -43,6 +45,7 @@ import com.example.projectmanagerapp.viewmodels.HomeViewModel
 import com.example.projectmanagerapp.viewmodels.HomeViewModelFactory
 import com.example.projectmanagerapp.viewmodels.MapPickerViewModel
 import com.example.projectmanagerapp.viewmodels.MapPickerViewModelFactory
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.Places
 
 
@@ -60,7 +63,8 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
 
         composable(AppDestinations.HOME_ROUTE) {
             val repository = MainFeaturesRepositoryImplement()
-            val boardViewModel: BoardViewModel = viewModel(factory = BoardViewModelFactory(repository))
+            val boardViewModel: BoardViewModel =
+                viewModel(factory = BoardViewModelFactory(repository))
             val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(repository))
 
             HomeScreen(
@@ -120,7 +124,8 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
                 onFacebookClick = {
                     Log.d("Navigation", "Facebook button clicked")
                     // Check if Facebook is configured
-                    val facebookAppId = context.getString(com.example.projectmanagerapp.R.string.facebook_app_id)
+                    val facebookAppId =
+                        context.getString(com.example.projectmanagerapp.R.string.facebook_app_id)
                     if (facebookAppId == "YOUR_FACEBOOK_APP_ID") {
                         Log.d("Navigation", "Facebook not configured yet")
                         authViewModel.resetState()
@@ -160,7 +165,11 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
             )
         }
         composable(AppDestinations.PROFILE_ROUTE) {
-            Profile()
+            val viewModel: UserProfileViewModel = hiltViewModel()
+            UserProfileScreen(
+                onNavigateBack = { navController.popBackStack() },
+                viewModel = viewModel
+            )
         }
         composable(AppDestinations.CREATE_BOARD_ROUTE) {
             val repository = MainFeaturesRepositoryImplement()
@@ -225,35 +234,49 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
                 navArgument("cardId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val boardId = backStackEntry.arguments?.getString("boardId")
-            val listId = backStackEntry.arguments?.getString("listId")
-            val cardId = backStackEntry.arguments?.getString("cardId")
+            val boardId = backStackEntry.arguments?.getString("boardId")!!
+            val listId = backStackEntry.arguments?.getString("listId")!!
+            val cardId = backStackEntry.arguments?.getString("cardId")!!
             val repository = MainFeaturesRepositoryImplement()
-
             val workManager = WorkManager.getInstance(context)
-
             val viewModel: CardDetailViewModel =
-                viewModel(factory = CardDetailViewModelFactory(repository, boardId!!, listId!!, cardId!!, workManager))
+                viewModel(
+                    factory = CardDetailViewModelFactory(
+                        repository,
+                        boardId,
+                        listId,
+                        cardId,
+                        workManager,
+                        context.applicationContext
+                    )
+                )
             CardDetailScreen(
                 viewModel = viewModel,
                 navController = navController,
-                onNavigateBack = {
-                    navController.popBackStack()}
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
-        composable(route = AppDestinations.MAP_PICKER_ROUTE) {
+        composable(route = AppDestinations.MAP_PICKER_ROUTE,
+            arguments = listOf(navArgument("latitude") {type = NavType.FloatType}, navArgument("longitude") {type = NavType.FloatType})) { backStackEntry ->
+
+            val latitude = backStackEntry.arguments?.getFloat("latitude")
+            val longitude = backStackEntry.arguments?.getFloat("longitude")
+            Log.d("MapPickerScreen", "Latitude: $latitude, Longitude: $longitude")
+            var lagLng: LatLng? = null
+            if(latitude != null && longitude != null) {
+                lagLng = LatLng(latitude.toDouble(), longitude.toDouble())
+            }
+
             val placesClient = Places.createClient(context)
             val viewModel: MapPickerViewModel =
-                viewModel(factory = MapPickerViewModelFactory(context, placesClient))
+                viewModel(factory = MapPickerViewModelFactory(context, placesClient, lagLng))
             MapPickerScreen(navController = navController, viewModel = viewModel)
         }
 
         composable(
             route = AppDestinations.ADD_MEMBER_ROUTE,
-            arguments = listOf(
-                navArgument("boardId") { type = NavType.StringType }
-            )
+            arguments = listOf(navArgument("boardId") { type = NavType.StringType })
         ) { backStackEntry ->
             val boardId = backStackEntry.arguments?.getString("boardId")
             val repository = MainFeaturesRepositoryImplement()
@@ -261,8 +284,7 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier) {
                 viewModel(factory = AddMemberViewModelFactory(repository, boardId!!))
             AddMemberScreen(
                 viewModel = viewModel,
-                onNavigateBack = {
-                    navController.popBackStack()}
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }
