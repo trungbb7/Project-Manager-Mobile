@@ -8,7 +8,6 @@ import com.example.projectmanagerapp.ui.main.Checklist
 import com.example.projectmanagerapp.ui.main.Comment
 import com.example.projectmanagerapp.ui.main.PMList
 import com.example.projectmanagerapp.ui.main.UnsplashPhoto
-import com.example.projectmanagerapp.ui.main.UpsplashAPIService
 import com.example.projectmanagerapp.ui.main.User
 import kotlinx.coroutines.flow.Flow
 
@@ -66,7 +65,12 @@ interface MainFeaturesRepository {
     suspend fun getMemberProfiles(memberIds: List<String>): List<User>
     suspend fun addMemberToBoard(boardId: String, userId: String)
     suspend fun assignMemberToCard(boardId: String, listId: String, cardId: String, userId: String)
-    suspend fun unassignMemberFromCard(boardId: String, listId: String, cardId: String, userId: String)
+    suspend fun unassignMemberFromCard(
+        boardId: String,
+        listId: String,
+        cardId: String,
+        userId: String
+    )
 
     suspend fun getRandomBackgroundImages(): List<UnsplashPhoto>
 

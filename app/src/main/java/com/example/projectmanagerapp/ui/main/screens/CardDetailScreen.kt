@@ -1,10 +1,10 @@
 package com.example.projectmanagerapp.ui.main.screens
 
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -38,23 +37,19 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MailOutline
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -68,12 +63,9 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -125,9 +117,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import com.google.android.gms.common.util.Strings
 
 
 @Composable
@@ -203,7 +192,7 @@ fun CardDetailScreen(
     val checklists = uiState.checklists
     val isLoading = uiState.isLoading
     val error = uiState.error
-    val context = LocalContext.current
+    LocalContext.current
     val userRecoverableAuthIntent = uiState.userRecoverableAuthIntent
 
     val authLauncher = rememberLauncherForActivityResult(
@@ -262,7 +251,7 @@ fun CardDetailScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
 
-    val timePickerState = rememberTimePickerState(
+    rememberTimePickerState(
         initialHour = LocalTime.now().hour,
         initialMinute = LocalTime.now().minute,
         is24Hour = true
@@ -333,7 +322,8 @@ fun CardDetailScreen(
                     onClick = {
                         selectedTime = LocalTime.of(timePickerState.hour, timePickerState.minute)
                         val ldt = LocalDateTime.of(selectedDate, selectedTime)
-                        selectedEpochMilli = ldt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                        selectedEpochMilli =
+                            ldt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
                         viewModel.setDueDate(selectedEpochMilli)
                         showTimePicker = false
                     }
@@ -379,7 +369,10 @@ fun CardDetailScreen(
 
                 // Breadcrumbs
                 item {
-                    Text("Trong danh sách: ${listName}", style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        "Trong danh sách: ${listName}",
+                        style = MaterialTheme.typography.titleSmall
+                    )
                     Text("Trên bảng: ${boardName}", style = MaterialTheme.typography.titleSmall)
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -498,7 +491,10 @@ fun CardDetailScreen(
                                             .size(40.dp)
                                             .clip(CircleShape)
                                             .border(
-                                                BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
+                                                BorderStroke(
+                                                    2.dp,
+                                                    MaterialTheme.colorScheme.primary
+                                                ),
                                                 CircleShape
                                             )
                                     )
@@ -579,7 +575,7 @@ fun CardDetailScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    navController.navigate(AppDestinations.MAP_PICKER_ROUTE)
+                                    navController.navigate(AppDestinations.MAP_PICKER_ROUTE.replace("{latitude}", cardLocation?.latitude.toString()).replace("{longitude}", cardLocation?.longitude.toString()))
                                 }
                         ) {
                             if (cardLocation != null) {
@@ -589,7 +585,10 @@ fun CardDetailScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text(cardLocation.address, style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    cardLocation.address,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
                                 TextButton(onClick = { viewModel.updateCardLocation(null) }) {
                                     Text("Xóa vị trí", color = MaterialTheme.colorScheme.error)
                                 }
@@ -632,10 +631,12 @@ fun CardDetailScreen(
 
                 if (checklists.isEmpty()) {
                     item {
-                        Column (
-                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
-                        ){
+                        ) {
                             Text("Chưa có checklist nào")
                             Spacer(modifier = Modifier.height(8.dp))
                             AiButton(
@@ -654,7 +655,12 @@ fun CardDetailScreen(
                                 viewModel.updateCheckListTitle(title, checklist.id)
                             },
                             onItemCheckedChange = { item, isChecked ->
-                                viewModel.updateCheckListItem(checklist.id, item.id, item.text, isChecked)
+                                viewModel.updateCheckListItem(
+                                    checklist.id,
+                                    item.id,
+                                    item.text,
+                                    isChecked
+                                )
                             },
                             onAddItem = { text ->
                                 viewModel.addCheckListItem(checklist.id, text)
@@ -874,7 +880,8 @@ fun ChecklistSection(
 
 
         val progress =
-            if (checklist.items.isNotEmpty()) checklist.items.count { it.isChecked }.toFloat() / checklist.items.size else 0f
+            if (checklist.items.isNotEmpty()) checklist.items.count { it.isChecked }
+                .toFloat() / checklist.items.size else 0f
         LinearProgressIndicator(progress = progress, modifier = Modifier.fillMaxWidth())
 
         checklist.items.forEach { item ->

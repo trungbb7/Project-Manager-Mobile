@@ -25,14 +25,14 @@ class UserProfileViewModel @Inject constructor(
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
-    
+
     private val _photoUri = MutableStateFlow<Uri?>(null)
     val photoUri: StateFlow<Uri?> = _photoUri.asStateFlow()
 
     init {
         loadCurrentUser()
     }
-    
+
     fun setPhotoUri(uri: Uri) {
         _photoUri.value = uri
     }
@@ -67,12 +67,12 @@ class UserProfileViewModel @Inject constructor(
             }
         }
     }
-    
+
     fun saveProfile(textUpdates: Map<String, Any>, imageUri: Uri?) {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
-            
+
             try {
                 val allUpdates = textUpdates.toMutableMap()
 
@@ -109,7 +109,7 @@ class UserProfileViewModel @Inject constructor(
                     val result = userRepository.updateUserProfile(currentUser.uid, updates)
                     if (result.isSuccess) {
                         // Instead of manually updating the user, just reload from source
-                        loadCurrentUser() 
+                        loadCurrentUser()
                         _error.value = "Cập nhật thành công!"
                     } else {
                         _error.value = "Không thể cập nhật hồ sơ"

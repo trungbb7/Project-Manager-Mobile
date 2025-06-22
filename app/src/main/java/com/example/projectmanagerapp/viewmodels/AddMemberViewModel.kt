@@ -16,8 +16,11 @@ data class AddMemberViewModelUIState(
 )
 
 
-class AddMemberViewModel(private val repository: MainFeaturesRepository, private val boardId: String) : ViewModel() {
-//    val searchQuery = MutableStateFlow("")
+class AddMemberViewModel(
+    private val repository: MainFeaturesRepository,
+    private val boardId: String
+) : ViewModel() {
+    //    val searchQuery = MutableStateFlow("")
 //    val searchResults = MutableStateFlow<List<User>>(emptyList())
 //    val isLoading = MutableStateFlow(false)
     private val _uiState = MutableStateFlow(AddMemberViewModelUIState())

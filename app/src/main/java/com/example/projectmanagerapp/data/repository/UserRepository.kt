@@ -7,13 +7,10 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -37,15 +34,16 @@ class UserRepository @Inject constructor(
 
             val user = if (existingUser.exists()) {
                 val currentUser = existingUser.toObject(User::class.java)!!
-                val updatedProviders = updateLinkedProviders(currentUser.linkedProviders, firebaseUser)
-                
+                val updatedProviders =
+                    updateLinkedProviders(currentUser.linkedProviders, firebaseUser)
+
                 val updates = mapOf(
                     "linkedProviders" to updatedProviders,
                     "isEmailVerified" to firebaseUser.isEmailVerified,
                     "updatedAt" to Timestamp.now(),
                     "lastLoginAt" to Timestamp.now()
                 )
-                
+
                 userDoc.update(updates).await()
                 currentUser.copy(
                     linkedProviders = updatedProviders,
@@ -66,7 +64,7 @@ class UserRepository @Inject constructor(
                     updatedAt = Timestamp.now(),
                     lastLoginAt = Timestamp.now()
                 )
-                
+
                 userDoc.set(newUser).await()
                 newUser
             }
@@ -103,12 +101,12 @@ class UserRepository @Inject constructor(
         return try {
             val updatesWithTimestamp = updates.toMutableMap()
             updatesWithTimestamp["updatedAt"] = Timestamp.now()
-            
+
             firestore.collection(USERS_COLLECTION)
                 .document(uid)
                 .update(updatesWithTimestamp)
                 .await()
-            
+
             Log.d(TAG, "User profile updated successfully")
             Result.success(Unit)
         } catch (e: Exception) {
@@ -148,7 +146,10 @@ class UserRepository @Inject constructor(
         }.distinct()
     }
 
-    private fun updateLinkedProviders(currentProviders: List<String>, firebaseUser: FirebaseUser): List<String> {
+    private fun updateLinkedProviders(
+        currentProviders: List<String>,
+        firebaseUser: FirebaseUser
+    ): List<String> {
         val newProviders = getProvidersFromFirebaseUser(firebaseUser)
         return (currentProviders + newProviders).distinct()
     }

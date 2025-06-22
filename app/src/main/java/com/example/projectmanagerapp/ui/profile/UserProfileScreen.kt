@@ -5,19 +5,63 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Work
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -47,7 +91,7 @@ fun UserProfileScreen(
     var position by remember { mutableStateOf("") }
     var bio by remember { mutableStateOf("") }
     var photoUrl by remember { mutableStateOf<Uri?>(null) }
-    
+
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -63,7 +107,7 @@ fun UserProfileScreen(
     LaunchedEffect(viewModel.photoUri.collectAsState().value) {
         photoUrl = viewModel.photoUri.value
     }
-    
+
     // Show snackbar on error
     LaunchedEffect(error) {
         error?.let {
@@ -97,21 +141,23 @@ fun UserProfileScreen(
                     if (isEditing) {
                         Button(onClick = {
                             val updates = mutableMapOf<String, Any>()
-                            if (displayName != user?.displayName) updates["displayName"] = displayName
-                            if (phoneNumber != user?.phoneNumber) updates["phoneNumber"] = phoneNumber
+                            if (displayName != user?.displayName) updates["displayName"] =
+                                displayName
+                            if (phoneNumber != user?.phoneNumber) updates["phoneNumber"] =
+                                phoneNumber
                             if (location != user?.location) updates["location"] = location
                             if (department != user?.department) updates["department"] = department
                             if (position != user?.position) updates["position"] = position
                             if (bio != user?.bio) updates["bio"] = bio
-                            
+
                             viewModel.saveProfile(updates, photoUrl)
                             isEditing = false
                         }) {
                             Text("Lưu")
                         }
                     } else {
-                        IconButton(onClick = { 
-                            isEditing = true 
+                        IconButton(onClick = {
+                            isEditing = true
                             user?.let {
                                 displayName = it.displayName
                                 phoneNumber = it.phoneNumber
@@ -139,6 +185,7 @@ fun UserProfileScreen(
                     CircularProgressIndicator()
                 }
             }
+
             user == null -> {
                 Box(
                     modifier = Modifier
@@ -149,6 +196,7 @@ fun UserProfileScreen(
                     Text("Không thể tải thông tin người dùng")
                 }
             }
+
             else -> {
                 UserProfileContent(
                     user = user!!,
@@ -211,7 +259,7 @@ private fun UserProfileContent(
             photoUrl = photoUrl,
             onImageClick = onImageClick
         )
-        
+
         // Basic Info
         ProfileSection(
             title = "Thông tin cơ bản",
@@ -224,8 +272,14 @@ private fun UserProfileContent(
             )
 
             if (isEditing) {
-                OutlinedTextField(value = phoneNumber, onValueChange = onPhoneNumberChange, label = { Text("Số điện thoại") })
-                OutlinedTextField(value = location, onValueChange = onLocationChange, label = { Text("Địa điểm") })
+                OutlinedTextField(
+                    value = phoneNumber,
+                    onValueChange = onPhoneNumberChange,
+                    label = { Text("Số điện thoại") })
+                OutlinedTextField(
+                    value = location,
+                    onValueChange = onLocationChange,
+                    label = { Text("Địa điểm") })
             } else {
                 if (user.phoneNumber.isNotBlank()) {
                     ProfileInfoItem(
@@ -243,15 +297,21 @@ private fun UserProfileContent(
                 }
             }
         }
-        
+
         // Work Info
         ProfileSection(
             title = "Thông tin công việc",
             icon = Icons.Default.Work
         ) {
-            if(isEditing){
-                OutlinedTextField(value = department, onValueChange = onDepartmentChange, label = { Text("Phòng ban") })
-                OutlinedTextField(value = position, onValueChange = onPositionChange, label = { Text("Chức vụ") })
+            if (isEditing) {
+                OutlinedTextField(
+                    value = department,
+                    onValueChange = onDepartmentChange,
+                    label = { Text("Phòng ban") })
+                OutlinedTextField(
+                    value = position,
+                    onValueChange = onPositionChange,
+                    label = { Text("Chức vụ") })
             } else {
                 if (user.department.isNotBlank()) {
                     ProfileInfoItem(
@@ -269,7 +329,7 @@ private fun UserProfileContent(
                 }
             }
         }
-        
+
         // Bio
         ProfileSection(
             title = "Giới thiệu",
@@ -299,7 +359,7 @@ private fun UserProfileContent(
                 }
             }
         }
-        
+
         // Skills
         if (!isEditing) {
             if (user.skills.isNotEmpty()) {
@@ -333,7 +393,7 @@ private fun ProfileHeader(
     photoUrl: Uri?,
     onImageClick: () -> Unit,
 ) {
-    val context = LocalContext.current
+    LocalContext.current
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -341,7 +401,8 @@ private fun ProfileHeader(
     ) {
         Box(modifier = Modifier.size(120.dp)) {
             AsyncImage(
-                model = photoUrl ?: user.photoUrl.takeIf { it.isNotBlank() } ?: R.drawable.user_image_placeholder,
+                model = photoUrl ?: user.photoUrl.takeIf { it.isNotBlank() }
+                ?: R.drawable.user_image_placeholder,
                 contentDescription = "Ảnh đại diện",
                 modifier = Modifier
                     .size(120.dp)
@@ -380,14 +441,14 @@ private fun ProfileHeader(
                 fontWeight = FontWeight.Bold
             )
         }
-        
+
         // Role
         Text(
             text = user.role.replaceFirstChar { it.uppercase() },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.primary
         )
-        
+
         // Status
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -435,9 +496,9 @@ private fun ProfileSection(
                     fontWeight = FontWeight.SemiBold
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             content()
         }
     }

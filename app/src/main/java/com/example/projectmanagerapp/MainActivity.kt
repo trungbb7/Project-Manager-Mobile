@@ -80,8 +80,6 @@ class MainActivity : AppCompatActivity() {
 }
 
 
-
-
 @Composable
 fun NotificationPermissionRequester() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -109,7 +107,6 @@ fun NotificationPermissionRequester() {
         }
     }
 }
-
 
 
 @Preview(showBackground = true)

@@ -30,7 +30,10 @@ data class BoardDetailUIState(
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class BoardDetailViewModel(val mainFeaturesRepository: MainFeaturesRepository, val boardId: String): ViewModel() {
+class BoardDetailViewModel(
+    val mainFeaturesRepository: MainFeaturesRepository,
+    val boardId: String
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BoardDetailUIState())
     val uiState: StateFlow<BoardDetailUIState> = _uiState.asStateFlow()
@@ -85,7 +88,7 @@ class BoardDetailViewModel(val mainFeaturesRepository: MainFeaturesRepository, v
             try {
                 val members = mainFeaturesRepository.getMemberProfiles(memberIds)
                 _uiState.value = _uiState.value.copy(members = members)
-                } catch (e: Exception) {
+            } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message)
             }
         }
@@ -93,9 +96,9 @@ class BoardDetailViewModel(val mainFeaturesRepository: MainFeaturesRepository, v
 
     fun addCard(card: Card) {
         viewModelScope.launch {
-            try{
+            try {
                 mainFeaturesRepository.addCard(card)
-            }catch (e: Exception) {
+            } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message)
             }
         }
@@ -151,7 +154,7 @@ class BoardDetailViewModel(val mainFeaturesRepository: MainFeaturesRepository, v
         }
     }
 
-    fun moveCard(cardId: String, targetListId: String){
+    fun moveCard(cardId: String, targetListId: String) {
         viewModelScope.launch {
             try {
                 mainFeaturesRepository.moveCard(cardId, targetListId)

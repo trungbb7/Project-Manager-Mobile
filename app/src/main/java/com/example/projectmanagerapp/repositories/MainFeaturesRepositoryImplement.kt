@@ -2,7 +2,6 @@ package com.example.projectmanagerapp.repositories
 
 import android.net.Uri
 import android.util.Log
-import androidx.compose.ui.unit.Constraints
 import com.example.projectmanagerapp.BuildConfig
 import com.example.projectmanagerapp.ui.main.Board
 import com.example.projectmanagerapp.ui.main.Card
@@ -26,7 +25,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.UUID
 
-class MainFeaturesRepositoryImplement: MainFeaturesRepository {
+class MainFeaturesRepositoryImplement : MainFeaturesRepository {
     private val firestore = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance()
     private val auth = FirebaseAuth.getInstance()
@@ -43,7 +42,7 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
         val snapshot = firestore.collection(Constants.USER_COLLECTION).document(uid).get().await()
         if (snapshot.exists()) {
             return snapshot.toObject(User::class.java)!!
-        }else{
+        } else {
             return null
         }
 
@@ -83,7 +82,6 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
     }
 
 
-
     override suspend fun editBoardName(
         board: Board,
         newName: String
@@ -93,7 +91,8 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
 
     override suspend fun uploadBoardBackgroundImage(imageUri: Uri): String {
         val storageRef = storage.reference
-        val imageRef = storageRef.child("${Constants.BOARD_BACKGROUND_REF}/${UUID.randomUUID()}_${imageUri.lastPathSegment}")
+        val imageRef =
+            storageRef.child("${Constants.BOARD_BACKGROUND_REF}/${UUID.randomUUID()}_${imageUri.lastPathSegment}")
         imageRef.putFile(imageUri).await()
         return imageRef.downloadUrl.await().toString()
     }
@@ -103,23 +102,25 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
     }
 
     override suspend fun getBoard(boardId: String): Flow<Board> = callbackFlow {
-        val listener = firestore.collection(Constants.BOARD_COLLECTION).document(boardId).addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                close(error)
-                return@addSnapshotListener
+        val listener = firestore.collection(Constants.BOARD_COLLECTION).document(boardId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val board = snapshot.toObject(Board::class.java)
+                    trySend(board!!)
+                }
             }
-            if (snapshot != null) {
-                val board = snapshot.toObject(Board::class.java)
-                trySend(board!!)
-            }
-        }
         awaitClose {
             listener.remove()
         }
     }
 
     override suspend fun getBoardOnce(boardId: String): Board? {
-        val snapshot = firestore.collection(Constants.BOARD_COLLECTION).document(boardId).get().await()
+        val snapshot =
+            firestore.collection(Constants.BOARD_COLLECTION).document(boardId).get().await()
         return snapshot.toObject(Board::class.java)
     }
 
@@ -132,52 +133,58 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
     }
 
     override suspend fun getLists(boardId: String): Flow<List<PMList>> = callbackFlow {
-        val listener = firestore.collection(Constants.LIST_COLLECTION).whereEqualTo("boardId", boardId).orderBy("createdAt")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
+        val listener =
+            firestore.collection(Constants.LIST_COLLECTION).whereEqualTo("boardId", boardId)
+                .orderBy("createdAt")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        close(error)
+                        return@addSnapshotListener
+                    }
+                    if (snapshot != null) {
+                        val lists =
+                            snapshot.documents.mapNotNull { it.toObject(PMList::class.java) }
+                        trySend(lists)
+                    }
                 }
-                if (snapshot != null) {
-                    val lists = snapshot.documents.mapNotNull { it.toObject(PMList::class.java) }
-                    trySend(lists)
-                }
-            }
         awaitClose { listener.remove() }
 
     }
 
     override suspend fun getCard(cardId: String): Flow<Card> = callbackFlow {
-        val listener = firestore.collection(Constants.CARD_COLLECTION).document(cardId).addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                close(error)
-                return@addSnapshotListener
-            }
-            if (snapshot != null && snapshot.exists()) {
-                val card = snapshot.toObject(Card::class.java)
-                if(card != null) {
-                trySend(card)
-                }else {
-                    close(Exception("Card is null"))
+        val listener = firestore.collection(Constants.CARD_COLLECTION).document(cardId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
                 }
-            }else {
-                close(Exception("Card not found"))
+                if (snapshot != null && snapshot.exists()) {
+                    val card = snapshot.toObject(Card::class.java)
+                    if (card != null) {
+                        trySend(card)
+                    } else {
+                        close(Exception("Card is null"))
+                    }
+                } else {
+                    close(Exception("Card not found"))
+                }
             }
-        }
         awaitClose { listener.remove() }
     }
 
     override suspend fun getCards(listId: String): Flow<List<Card>> = callbackFlow {
-        val listener = firestore.collection(Constants.CARD_COLLECTION).whereEqualTo("listId", listId).addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                close(error)
-                return@addSnapshotListener
-            }
-            if (snapshot != null) {
-                val cards = snapshot.documents.mapNotNull { it.toObject(Card::class.java) }
-                trySend(cards)
-            }
-        }
+        val listener =
+            firestore.collection(Constants.CARD_COLLECTION).whereEqualTo("listId", listId).orderBy("createdAt")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        close(error)
+                        return@addSnapshotListener
+                    }
+                    if (snapshot != null) {
+                        val cards = snapshot.documents.mapNotNull { it.toObject(Card::class.java) }
+                        trySend(cards)
+                    }
+                }
         awaitClose { listener.remove() }
     }
 
@@ -209,62 +216,71 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
     }
 
     override suspend fun moveCard(cardId: String, targetListId: String) {
-        firestore.collection(Constants.CARD_COLLECTION).document(cardId).update("listId", targetListId).await()
+        firestore.collection(Constants.CARD_COLLECTION).document(cardId)
+            .update("listId", targetListId).await()
     }
 
     override suspend fun getBoardName(boardId: String): Flow<String> = callbackFlow {
-        val listener = firestore.collection(Constants.BOARD_COLLECTION).document(boardId).addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                close(error)
-                return@addSnapshotListener
+        val listener = firestore.collection(Constants.BOARD_COLLECTION).document(boardId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val board = snapshot.toObject(Board::class.java)
+                    trySend(board!!.name)
+                }
             }
-            if (snapshot != null) {
-                val board = snapshot.toObject(Board::class.java)
-                trySend(board!!.name)
-            }
-        }
         awaitClose { listener.remove() }
     }
 
     override suspend fun getListName(listId: String): Flow<String> = callbackFlow {
-        val listener = firestore.collection(Constants.LIST_COLLECTION).document(listId).addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                close(error)
-                return@addSnapshotListener
+        val listener = firestore.collection(Constants.LIST_COLLECTION).document(listId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val list = snapshot.toObject(PMList::class.java)
+                    trySend(list!!.name)
+                }
             }
-            if (snapshot != null) {
-                val list = snapshot.toObject(PMList::class.java)
-                trySend(list!!.name)
-            }
-        }
         awaitClose { listener.remove() }
     }
 
     override suspend fun getComments(cardId: String): Flow<List<Comment>> = callbackFlow {
-        val listener = firestore.collection(Constants.COMMENT_COLLECTION).whereEqualTo("cardId", cardId).addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                close(error)
-                return@addSnapshotListener
-            }
-            if (snapshot != null) {
-                val comments = snapshot.documents.mapNotNull { it.toObject(Comment::class.java) }
-                trySend(comments)
-            }
-        }
+        val listener =
+            firestore.collection(Constants.COMMENT_COLLECTION).whereEqualTo("cardId", cardId)
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        close(error)
+                        return@addSnapshotListener
+                    }
+                    if (snapshot != null) {
+                        val comments =
+                            snapshot.documents.mapNotNull { it.toObject(Comment::class.java) }
+                        trySend(comments)
+                    }
+                }
         awaitClose { listener.remove() }
     }
 
     override suspend fun getCheckLists(cardId: String): Flow<List<Checklist>> = callbackFlow {
-        val listener = firestore.collection(Constants.CHECKLIST_COLLECTION).whereEqualTo("cardId", cardId).addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                close(error)
-                return@addSnapshotListener
-            }
-            if (snapshot != null) {
-                val checklists = snapshot.documents.mapNotNull { it.toObject(Checklist::class.java) }
-                trySend(checklists)
-            }
-        }
+        val listener =
+            firestore.collection(Constants.CHECKLIST_COLLECTION).whereEqualTo("cardId", cardId)
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        close(error)
+                        return@addSnapshotListener
+                    }
+                    if (snapshot != null) {
+                        val checklists =
+                            snapshot.documents.mapNotNull { it.toObject(Checklist::class.java) }
+                        trySend(checklists)
+                    }
+                }
         awaitClose { listener.remove() }
     }
 
@@ -273,11 +289,13 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
     }
 
     override suspend fun updateCheckList(checklist: Checklist) {
-        firestore.collection(Constants.CHECKLIST_COLLECTION).document(checklist.id).set(checklist).await()
+        firestore.collection(Constants.CHECKLIST_COLLECTION).document(checklist.id).set(checklist)
+            .await()
     }
 
     override suspend fun updateCheckListTitle(checklistId: String, newTitle: String) {
-        firestore.collection(Constants.CHECKLIST_COLLECTION).document(checklistId).update("title", newTitle).await()
+        firestore.collection(Constants.CHECKLIST_COLLECTION).document(checklistId)
+            .update("title", newTitle).await()
     }
 
     override suspend fun deleteCheckList(checklistId: String) {
@@ -301,13 +319,14 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
 
     override suspend fun getMemberProfiles(memberIds: List<String>): List<User> {
         if (memberIds.isEmpty()) return emptyList()
-        val snapshot = firestore.collection(Constants.USER_COLLECTION).whereIn("uid", memberIds).get().await()
+        val snapshot =
+            firestore.collection(Constants.USER_COLLECTION).whereIn("uid", memberIds).get().await()
         return snapshot.toObjects(User::class.java)
     }
 
     override suspend fun addMemberToBoard(boardId: String, userId: String) {
-        firestore.collection(Constants.BOARD_COLLECTION).document(boardId).
-        update("memberIds", FieldValue.arrayUnion(userId)).await()
+        firestore.collection(Constants.BOARD_COLLECTION).document(boardId)
+            .update("memberIds", FieldValue.arrayUnion(userId)).await()
     }
 
     override suspend fun assignMemberToCard(
@@ -339,7 +358,8 @@ class MainFeaturesRepositoryImplement: MainFeaturesRepository {
         cardId: String,
         location: CardLocation?
     ) {
-        firestore.collection(Constants.CARD_COLLECTION).document(cardId).update("location", location).await()
+        firestore.collection(Constants.CARD_COLLECTION).document(cardId)
+            .update("location", location).await()
     }
 
 

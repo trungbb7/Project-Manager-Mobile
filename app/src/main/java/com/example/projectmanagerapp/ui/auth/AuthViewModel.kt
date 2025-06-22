@@ -1,24 +1,24 @@
 package com.example.projectmanagerapp.ui.auth
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.AuthCredential
-import android.util.Log
 import com.example.projectmanagerapp.data.repository.UserRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
+import com.google.firebase.auth.AuthCredential
+import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
-import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.FacebookAuthProvider
+import com.google.firebase.auth.UserProfileChangeRequest
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
@@ -64,7 +64,10 @@ class AuthViewModel @Inject constructor(
                     if (result.isSuccess) {
                         Log.d("AuthViewModel", "User info updated in Firestore")
                     } else {
-                        Log.e("AuthViewModel", "Failed to update user in Firestore: ${result.exceptionOrNull()}")
+                        Log.e(
+                            "AuthViewModel",
+                            "Failed to update user in Firestore: ${result.exceptionOrNull()}"
+                        )
                     }
                 } catch (e: Exception) {
                     Log.e("AuthViewModel", "Error updating user info", e)
@@ -227,7 +230,11 @@ class AuthViewModel @Inject constructor(
         _authState.value = AuthState.Idle
     }
 
-    private suspend fun handleAccountCollisionWithEmail(newCredential: AuthCredential, providerName: String, email: String?) {
+    private suspend fun handleAccountCollisionWithEmail(
+        newCredential: AuthCredential,
+        providerName: String,
+        email: String?
+    ) {
         try {
             val currentUser = auth.currentUser
             if (currentUser != null) {
@@ -235,7 +242,8 @@ class AuthViewModel @Inject constructor(
                 // Link the new credential to the existing account
                 currentUser.linkWithCredential(newCredential).await()
                 updateUserInfo()
-                _authState.value = AuthState.Success("Đã liên kết tài khoản $providerName thành công")
+                _authState.value =
+                    AuthState.Success("Đã liên kết tài khoản $providerName thành công")
                 _isUserLoggedIn.value = true
             } else if (email != null) {
                 Log.d("AuthViewModel", "Account collision detected for email: $email")
@@ -257,10 +265,11 @@ class AuthViewModel @Inject constructor(
                 // Show simple message
                 _authState.value = AuthState.Error(
                     "Email $email đã được đăng ký với $existingProvider.\n\n" +
-                    "Vui lòng đăng nhập bằng $existingProvider trước, sau đó tài khoản $providerName sẽ được liên kết tự động."
+                            "Vui lòng đăng nhập bằng $existingProvider trước, sau đó tài khoản $providerName sẽ được liên kết tự động."
                 )
             } else {
-                _authState.value = AuthState.Error("Không thể xác định email từ tài khoản $providerName")
+                _authState.value =
+                    AuthState.Error("Không thể xác định email từ tài khoản $providerName")
             }
         } catch (e: Exception) {
             Log.e("AuthViewModel", "Failed to handle account collision", e)
@@ -272,9 +281,6 @@ class AuthViewModel @Inject constructor(
         auth.signOut()
         _isUserLoggedIn.value = false
     }
-
-
-
 
 
     private suspend fun checkAndLinkPendingCredential() {
@@ -292,7 +298,8 @@ class AuthViewModel @Inject constructor(
                     _pendingLinkCredential.value = null
                     _pendingLinkProvider.value = null
 
-                    _authState.value = AuthState.Success("Đã liên kết tài khoản $pendingProvider thành công")
+                    _authState.value =
+                        AuthState.Success("Đã liên kết tài khoản $pendingProvider thành công")
                 }
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Failed to link pending credential", e)

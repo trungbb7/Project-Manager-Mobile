@@ -5,7 +5,6 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.projectmanagerapp.ui.auth.LoginScreen
 import com.example.projectmanagerapp.utils.getAddressFromCoordinates
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.AutocompletePrediction
@@ -34,15 +33,17 @@ data class MapPickerUiState(
 @OptIn(FlowPreview::class)
 class MapPickerViewModel(
     @ApplicationContext private val context: Context,
-    private val placesClient: PlacesClient
+    private val placesClient: PlacesClient,
+    lagLng: LatLng?
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(MapPickerUiState())
+    private val _uiState = MutableStateFlow(MapPickerUiState(selectedLatLng = lagLng))
     val uiState = _uiState.asStateFlow()
 
     private val queryFlow = MutableStateFlow("")
 
     init {
+        Log.d("location", "lagLng: $lagLng")
         viewModelScope.launch {
             queryFlow
                 .debounce(300L)
@@ -95,7 +96,8 @@ class MapPickerViewModel(
     }
 
     private fun fetchPlaceDetails(placeId: String) {
-        val placeFields = listOf(Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS, Place.Field.LAT_LNG)
+        val placeFields =
+            listOf(Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS, Place.Field.LAT_LNG)
         val request = FetchPlaceRequest.newInstance(placeId, placeFields)
 
         placesClient.fetchPlace(request)
@@ -120,7 +122,8 @@ class MapPickerViewModel(
         )
 
         viewModelScope.launch {
-            val addressObject = getAddressFromCoordinates(context, latLng.latitude, latLng.longitude)
+            val addressObject =
+                getAddressFromCoordinates(context, latLng.latitude, latLng.longitude)
             val formattedAddress = if (addressObject != null) {
                 addressObject.getAddressLine(0)
             } else {
